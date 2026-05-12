@@ -1,10 +1,10 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, Suspense, useEffect, useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { status } = useSession()
@@ -27,22 +27,27 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
-    const result = await signIn('credentials', {
-      username,
-      password,
-      redirect: false,
-      callbackUrl,
-    })
+    try {
+      const result = await signIn('credentials', {
+        username,
+        password,
+        redirect: false,
+        callbackUrl,
+      })
 
-    setLoading(false)
+      if (result?.error) {
+        setError('Invalid username or password')
+        setLoading(false)
+        return
+      }
 
-    if (result?.error) {
+      // Give NextAuth time to set cookies before navigating
+      await new Promise(resolve => setTimeout(resolve, 100))
+      router.push(callbackUrl)
+    } catch (err) {
       setError('Invalid username or password')
-      return
+      setLoading(false)
     }
-
-    router.replace(callbackUrl)
-    router.refresh()
   }
 
   return (
@@ -87,5 +92,13 @@ export default function LoginPage() {
         </form>
       </section>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-md pt-16 text-sm text-slate-600">Loading login...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }
