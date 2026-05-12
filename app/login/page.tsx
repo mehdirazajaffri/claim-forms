@@ -27,27 +27,22 @@ function LoginForm() {
     setError('')
     setLoading(true)
 
-    try {
-      const result = await signIn('credentials', {
-        username,
-        password,
-        redirect: false,
-        callbackUrl,
-      })
+    const result = await signIn('credentials', {
+      username,
+      password,
+      redirect: false,
+      callbackUrl,
+    })
 
-      if (result?.error) {
-        setError('Invalid username or password')
-        setLoading(false)
-        return
-      }
-
-      // Give NextAuth time to set cookies before navigating
-      await new Promise(resolve => setTimeout(resolve, 100))
-      router.push(callbackUrl)
-    } catch (err) {
+    if (result?.error) {
       setError('Invalid username or password')
       setLoading(false)
+      return
     }
+
+    // Use window.location for hard redirect after successful authentication
+    // This ensures proper page reload with authenticated session
+    window.location.href = callbackUrl
   }
 
   return (
