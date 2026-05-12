@@ -10,6 +10,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id             String   @id @default(cuid())
+  username       String   @unique
+  hashedPassword String
+  role           String   @default("staff")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 model Patient {
   id        String     @id @default(cuid())
   cardNumber String    @unique
@@ -70,7 +79,8 @@ model Claim {
   // Physician Info
   treatingPhysicianName String?
   telFax                String?
-  signature             String? // Could store base64 or path
+  signature             String? // Patient/Guardian signature (base64)
+  physicianSignature    String? // Physician signature and stamp (base64)
   
   // Almadallah Use Only
   approvedTariff        Boolean @default(false)

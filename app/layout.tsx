@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { IBM_Plex_Sans, Space_Grotesk } from 'next/font/google'
 import Link from 'next/link'
+import Providers from './providers'
+import AuthNav from '@/components/AuthNav'
 import './globals.css'
 
 const bodyFont = IBM_Plex_Sans({
@@ -28,29 +30,32 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${bodyFont.variable} ${displayFont.variable}`}>
-        <div className="app-shell">
-          <header className="app-header">
-            <div className="app-header__inner">
-              <Link href="/" className="app-brand" aria-label="Go to dashboard">
-                <span className="app-brand__eyebrow">Almadallah</span>
-                <span className="app-brand__title">Claims Workspace</span>
-              </Link>
-
-              <nav className="app-nav" aria-label="Primary">
-                <Link href="/" className="app-nav__link">
-                  Dashboard
+        <Providers>
+          <div className="app-shell">
+            <header className="app-header">
+              <div className="app-header__inner">
+                <Link href="/" className="app-brand" aria-label="Go to dashboard">
+                  <span className="app-brand__eyebrow">Almadallah</span>
+                  <span className="app-brand__title">Claims Workspace</span>
                 </Link>
-                <Link href="/claims/new" className="app-nav__link app-nav__link--strong">
-                  New Claim
-                </Link>
-              </nav>
-            </div>
-          </header>
 
-          <main className="app-main">
-            <div className="app-main__inner">{children}</div>
-          </main>
-        </div>
+                <nav className="app-nav" aria-label="Primary">
+                  <Link href="/" className="app-nav__link">
+                    Dashboard
+                  </Link>
+                  <Link href="/claims/new" className="app-nav__link app-nav__link--strong">
+                    New Claim
+                  </Link>
+                  <AuthNav />
+                </nav>
+              </div>
+            </header>
+
+            <main className="app-main">
+              <div className="app-main__inner">{children}</div>
+            </main>
+          </div>
+        </Providers>
       </body>
     </html>
   )

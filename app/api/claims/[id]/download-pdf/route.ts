@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/auth'
 import { fillPdfForm, getPdfFieldNames } from '@/lib/pdf-handler'
 import { buildClaimLatex, compileClaimLatexPdf } from '@/lib/latex-claim'
 
@@ -9,6 +10,11 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const session = await auth()
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const claim = await prisma.claim.findUnique({
       where: { id: params.id },

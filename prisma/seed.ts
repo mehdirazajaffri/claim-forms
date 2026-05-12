@@ -1,8 +1,29 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
+  const fixedUsers = [
+    { username: 'admin', password: 'Admin@123', role: 'admin' },
+    { username: 'claims1', password: 'Claims@123', role: 'staff' },
+    { username: 'claims2', password: 'Claims@123', role: 'staff' },
+    { username: 'ramshamehdi', password: 'Mehdi12345', role: 'staff' },
+  ]
+
+  for (const user of fixedUsers) {
+    const hashedPassword = await bcrypt.hash(user.password, 12)
+    await prisma.user.upsert({
+      where: { username: user.username },
+      update: { hashedPassword, role: user.role },
+      create: {
+        username: user.username,
+        hashedPassword,
+        role: user.role,
+      },
+    })
+  }
+
   // Clean existing data
   await prisma.claim.deleteMany({})
   await prisma.patient.deleteMany({})
@@ -182,6 +203,8 @@ async function main() {
   })
 
   console.log('✅ Database seeded successfully!')
+  console.log(`Created/updated ${fixedUsers.length} fixed login users`)
+  console.log('Usernames: admin, claims1, claims2')
   console.log(`Created ${2} patients with ${5} total claims`)
   console.log('\nPatient 1:')
   console.log(`  Card: ${patient1.cardNumber}`)

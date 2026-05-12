@@ -38,6 +38,8 @@ type ClaimResponse = {
   inPatientCost?: string
   treatingPhysicianName?: string
   telFax?: string
+  signature?: string
+  physicianSignature?: string
   patient?: {
     name?: string
     cardNumber?: string
@@ -254,11 +256,14 @@ export default function PrintClaimPage() {
               </tr>
               <tr>
                 <td colSpan={8}><span className="label">Tel/Fax:</span> {claim.telFax || ''}</td>
-                <td colSpan={4}></td>
+                <td colSpan={4} rowSpan={2}></td>
               </tr>
               <tr>
-                <td colSpan={8}><span className="label">Signature and stamp</span></td>
-                <td colSpan={4}></td>
+                <td colSpan={8}><span className="label">Signature and stamp</span>
+                  {claim.physicianSignature
+                    ? <div style={{marginTop:'4px'}}><img src={claim.physicianSignature} alt="Physician signature" style={{maxHeight:'60px', maxWidth:'100%', objectFit:'contain'}} /></div>
+                    : null}
+                </td>
               </tr>
               <tr>
                 <td colSpan={8}><span className="label">Date</span> {fmtDate(claim.date)}</td>
@@ -289,17 +294,17 @@ export default function PrintClaimPage() {
         .title{ text-align:center; font-weight:700; font-size:22px; line-height:1.1; margin-top:6px; color:#2b2b2b; }
         .no{ text-align:right; font-size:13px; font-weight:700; margin-top:8px; }
         .no-val{ display:block; font-size:10px; font-weight:700; letter-spacing:0.3px; margin-top:2px; }
-        table.form{ width:100%; border-collapse:collapse; margin-top:1mm; font-size:11px; table-layout:fixed; border:1.5px solid #2b2b2b; }
+        table.form{ width:100%; border-collapse:collapse; margin-top:1mm; font-size:12px; table-layout:fixed; border:1.5px solid #2b2b2b; }
         :global(col.col-fixed){ width:8.333%; }
         table.form td{ border:1px solid #cfcfcf; vertical-align:top; padding:4px 10px; word-break:break-word; background:#fff; }
         .top-row td{ padding-top:6px; padding-bottom:6px; }
         .row-md td{ min-height:25px; }
         .row-lg td{ min-height:46px; }
         .row-xl td{ min-height:62px; }
-        .section{ background:#dcccb6 !important; text-align:center; font-weight:700; letter-spacing:0; color:#666; }
-        .subsection{ background:#dcccb6 !important; font-weight:700; color:#666; }
+        .section{ background:#dcccb6 !important; text-align:center; font-weight:700; letter-spacing:0.5px; color:#3d2f1e; font-size:12px; }
+        .subsection{ background:#dcccb6 !important; font-weight:700; color:#3d2f1e; font-size:12px; }
         .right-note{ text-align:center; font-weight:500; font-style:italic; color:#777; }
-        .label{ font-weight:600; }
+        .label{ font-weight:400; }
         .italic{ font-style:italic; }
         .tiny{ font-size:9px; color:#777; font-weight:500; font-style:italic; }
         .checks{ display:flex; flex-direction:column; gap:4px; }
@@ -309,8 +314,8 @@ export default function PrintClaimPage() {
         .pre{ white-space:pre-wrap; line-height:1.2; }
         .box{ min-height:32px; }
         .box.tall{ min-height:74px; }
-        .use-only-h{ background:#dcccb6 !important; font-weight:700; color:#666; }
-        .consent{ background:#dcccb6 !important; font-size:9px; color:#666; line-height:1.25; }
+        .use-only-h{ background:#dcccb6 !important; font-weight:700; color:#3d2f1e; }
+        .consent{ background:#dcccb6 !important; font-size:9px; color:#3d2f1e; line-height:1.25; }
         @media print {
           :global(body){ background:#fff; }
           .toolbar{ display:none !important; }

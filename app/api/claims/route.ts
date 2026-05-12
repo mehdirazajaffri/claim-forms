@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/auth'
 
 export async function POST(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await req.json()
-    
+
+    // Coerce cause: checkboxes may send boolean or array — normalize to string or null
+    const causeRaw = body.cause
+    const cause = typeof causeRaw === 'string' ? causeRaw || null
+      : Array.isArray(causeRaw) ? causeRaw.filter(Boolean).join(', ') || null
+      : null
+
     // Create claim
     const claim = await prisma.claim.create({
       data: {
@@ -18,7 +30,7 @@ export async function POST(req: NextRequest) {
         familyHistory: body.familyHistory || false,
         additionalNotes: body.additionalNotes,
         clinicalFindings: body.clinicalFindings,
-        cause: body.cause,
+        cause,
         otherCause: body.otherCause,
         assessmentAcute: body.assessmentAcute || false,
         assessmentChronic: body.assessmentChronic || false,
@@ -42,6 +54,8 @@ export async function POST(req: NextRequest) {
         telFax: body.telFax,
         approvedTariff: body.approvedTariff || false,
         approvalCode: body.approvalCode,
+        signature: body.signature || null,
+        physicianSignature: body.physicianSignature || null,
       },
     })
     
@@ -53,6 +67,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const claims = await prisma.claim.findMany({
       include: {

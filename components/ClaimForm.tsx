@@ -78,10 +78,21 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
   const [searchFeedback, setSearchFeedback] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [pendingClaimDeletion, setPendingClaimDeletion] = useState<string | null>(null)
+  const [physicianSignatureImage, setPhysicianSignatureImage] = useState<string | null>(null)
+
+
+  const handlePhysicianSignaturePaste = () => {
+    setPhysicianSignatureImage('/signature.png')
+  }
 
   useEffect(() => {
     fetchPatients()
   }, [])
+
+
+
+
+
 
   useEffect(() => {
     const claimId = searchParams.get('claimId')
@@ -295,8 +306,9 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
       }
 
       const claimResponse = await axios.post('/api/claims', {
-        patientId: patientData.id,
+        patientId: patientData!.id,
         ...data,
+         physicianSignature: physicianSignatureImage,
       })
 
       setLastSavedClaimId(claimResponse.data.id)
@@ -886,7 +898,36 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
               />
               <div>
                 <label className="block text-xs font-semibold text-gray-900 mb-2">Signature and stamp</label>
-                <div className="h-16 border border-gray-400 mb-3"></div>
+                <div 
+                  className="h-20 border border-gray-300 mb-2 flex items-center justify-center overflow-hidden bg-white"
+                >
+                  {physicianSignatureImage ? (
+                    <img src={physicianSignatureImage} alt="Physician signature" className="max-h-full max-w-full object-contain p-1" />
+                  ) : null}
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePhysicianSignaturePaste}
+                    aria-label="Sign"
+                    title="Sign"
+                    className="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 rounded border border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true">
+                      <path d="M3 21h6" />
+                      <path d="M14.5 4.5a2.1 2.1 0 0 1 3 3L8 17l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPhysicianSignatureImage(null)}
+                    disabled={!physicianSignatureImage}
+                    aria-label="Remove physician signature"
+                    className="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 rounded border border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    x
+                  </button>
+                </div>
               </div>
               <label className="block text-xs font-semibold text-gray-900 mb-1">Date</label>
               <input
@@ -899,7 +940,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
             {/* Right Column - Patient/Guardian */}
             <div>
               <div className="text-xs font-bold text-gray-900 mb-4">Patient/Guardian signature</div>
-              <div className="h-16 border border-gray-400 mb-3"></div>
+              <div className="h-20 border border-gray-300 mb-3" />
               <label className="block text-xs font-semibold text-gray-900 mb-1">Date</label>
               <input
                 type="date"
