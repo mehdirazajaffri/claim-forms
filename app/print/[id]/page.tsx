@@ -267,7 +267,7 @@ export default function PrintClaimPage() {
         .toolbar small{ color:#6b7280; margin-left:auto; }
         .page-state{ padding:24px; }
         .page-wrap{ padding:0; display:flex; justify-content:center; }
-        .page{ width:210mm; min-height:297mm; background:#f3f3f3; border:3px solid #1f1f1f; box-shadow:none; padding:8mm 8mm 9mm; box-sizing:border-box; }
+        .page{ width:210mm; min-height:297mm; background:#f3f3f3; border:none; box-shadow:none; padding:8mm 8mm 9mm; box-sizing:border-box; }
         .top{ display:grid; grid-template-columns:1fr auto 1fr; align-items:start; column-gap:8px; margin-bottom:2mm; }
         .logo-block{ display:flex; align-items:flex-start; margin-top:2px; }
         .logo-image{ height:52px; width:auto; object-fit:contain; }

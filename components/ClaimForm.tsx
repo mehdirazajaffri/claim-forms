@@ -63,7 +63,7 @@ interface FormData {
   approvalCode: string
 }
 
-export default function ClaimForm() {
+export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const { register, handleSubmit, reset, setValue } = useForm<FormData>()
   const searchParams = useSearchParams()
   const [patient, setPatient] = useState<Patient | null>(null)
@@ -250,6 +250,7 @@ export default function ClaimForm() {
       setLastSavedClaimId(claimResponse.data.id)
 
       setSuccess(true)
+        if (onSuccess) onSuccess()
       setTimeout(() => setSuccess(false), 3000)
       reset()
       setCardNumber('')
@@ -259,6 +260,44 @@ export default function ClaimForm() {
     } catch (error) {
       console.error('Failed to submit claim:', error)
       setSubmitError('Error submitting claim. Please review required details and retry.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteClaim = async (claimId: string) => {
+    if (!confirm('Are you sure you want to delete this claim?')) return
+    
+    setLoading(true)
+    try {
+      await axios.delete(`/api/claims/${claimId}`)
+      setSearchFeedback('Claim deleted successfully.')
+      reset()
+      setCardNumber('')
+      setPatient(null)
+      fetchPatients()
+    } catch (error) {
+      console.error('Failed to delete claim:', error)
+      setSubmitError('Error deleting claim. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deletePatient = async (patientId: string) => {
+    if (!confirm('Are you sure you want to delete this patient and all their claims?')) return
+    
+    setLoading(true)
+    try {
+      await axios.delete(`/api/patients/${patientId}`)
+      setSearchFeedback('Patient deleted successfully.')
+      reset()
+      setCardNumber('')
+      setPatient(null)
+      fetchPatients()
+    } catch (error) {
+      console.error('Failed to delete patient:', error)
+      setSubmitError('Error deleting patient. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -279,10 +318,10 @@ export default function ClaimForm() {
         {/* Navigation */}
         <div className="mb-6 flex justify-end gap-3">
           <Link
-            href="/patients"
+            href="/"
             className="px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-800 font-medium text-sm"
           >
-            View All Patients →
+            Back to Registry →
           </Link>
         </div>
 
@@ -777,7 +816,7 @@ export default function ClaimForm() {
           </div>
 
           {/* Submit Buttons */}
-          <div className="flex gap-4 pt-6 border-t border-gray-400">
+          <div className="flex gap-4 pt-6 border-t border-gray-400 flex-wrap">
             <button
               type="submit"
               disabled={loading}
@@ -796,6 +835,26 @@ export default function ClaimForm() {
             >
               CLEAR FORM
             </button>
+            {patient && lastSavedClaimId && (
+              <button
+                type="button"
+                onClick={() => deleteClaim(lastSavedClaimId)}
+                disabled={loading}
+                className="px-8 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 font-semibold text-sm"
+              >
+                {loading ? 'Deleting...' : 'DELETE CLAIM'}
+              </button>
+            )}
+            {patient && (
+              <button
+                type="button"
+                onClick={() => deletePatient(patient.id)}
+                disabled={loading}
+                className="px-8 py-3 bg-red-800 text-white rounded hover:bg-red-900 disabled:bg-gray-400 font-semibold text-sm"
+              >
+                {loading ? 'Deleting...' : 'DELETE PATIENT'}
+              </button>
+            )}
           </div>
         </form>
       </div>

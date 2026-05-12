@@ -23,3 +23,25 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch patient' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Delete all claims for this patient first
+    await prisma.claim.deleteMany({
+      where: { patientId: params.id },
+    })
+    
+    // Then delete the patient
+    const patient = await prisma.patient.delete({
+      where: { id: params.id },
+    })
+    
+    return NextResponse.json({ success: true, patient })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Failed to delete patient' }, { status: 500 })
+  }
+}

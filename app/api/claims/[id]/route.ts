@@ -42,3 +42,19 @@ export async function PUT(
     return NextResponse.json({ error: 'Failed to update claim' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const claim = await prisma.claim.delete({
+      where: { id: params.id },
+    })
+    
+    return NextResponse.json({ success: true, claim })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Failed to delete claim' }, { status: 500 })
+  }
+}

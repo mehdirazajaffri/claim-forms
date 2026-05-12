@@ -31,6 +31,14 @@ export default function PatientsList() {
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [formData, setFormData] = useState({
+    cardNumber: '',
+    name: '',
+    birthDate: '',
+    sex: '',
+    policyNo: '',
+  })
 
   useEffect(() => {
     fetchPatients()
@@ -63,6 +71,67 @@ export default function PatientsList() {
     setExpandedPatient(expandedPatient === patientId ? null : patientId)
   }
 
+  const deleteClaim = async (claimId: string, patientName: string) => {
+    if (!confirm(`Delete claim? This action cannot be undone.`)) return
+
+    try {
+      setLoading(true)
+      await axios.delete(`/api/claims/${claimId}`)
+      fetchPatients()
+    } catch (error) {
+      console.error('Failed to delete claim:', error)
+      alert('Error deleting claim. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deletePatient = async (patientId: string, patientName: string) => {
+    if (!confirm(`Delete patient "${patientName}" and all their claims? This action cannot be undone.`)) return
+
+    try {
+      setLoading(true)
+      await axios.delete(`/api/patients/${patientId}`)
+      setExpandedPatient(null)
+      fetchPatients()
+    } catch (error) {
+      console.error('Failed to delete patient:', error)
+      alert('Error deleting patient. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddPatient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.cardNumber.trim() || !formData.name.trim()) {
+      alert('Card Number and Name are required')
+      return
+    }
+
+    try {
+      setLoading(true)
+      await axios.post('/api/patients', {
+        cardNumber: formData.cardNumber.trim(),
+        name: formData.name.trim(),
+        birthDate: formData.birthDate || null,
+        sex: formData.sex || null,
+        policyNo: formData.policyNo.trim() || null,
+      })
+      setFormData({ cardNumber: '', name: '', birthDate: '', sex: '', policyNo: '' })
+      setShowAddForm(false)
+      fetchPatients()
+      alert('Patient added successfully!')
+    } catch (error: any) {
+      console.error('Failed to add patient:', error)
+      const errorMsg = error.response?.data?.error || 'Failed to add patient'
+      alert(errorMsg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -77,13 +146,103 @@ export default function PatientsList() {
             <h2 className="text-xl font-bold text-gray-900">Patient Records</h2>
             <p className="text-gray-600 mt-1">View and manage all patients and their claims</p>
           </div>
-          <Link
-            href="/"
-            className="px-6 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-800 font-medium"
-          >
-            ← Back to Claim Form
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href="/claims/new"
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+            >
+              + Create Claim
+            </Link>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
+            >
+              {showAddForm ? '✕ Cancel' : '+ Add Patient'}
+            </button>
+          </div>
         </div>
+
+        {/* Add Patient Form */}
+        {showAddForm && (
+          <div className="mb-6 bg-white p-6 rounded-lg shadow border-l-4 border-green-600">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Patient</h3>
+            <form onSubmit={handleAddPatient}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1">Card Number *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., AMS-2026-003"
+                    value={formData.cardNumber}
+                    onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., John Smith"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1">Birth Date</label>
+                  <input
+                    type="date"
+                    aria-label="Birth Date"
+                    value={formData.birthDate}
+                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1">Sex</label>
+                  <select
+                    aria-label="Sex"
+                    value={formData.sex}
+                    onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">Select...</option>
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-900 mb-1">Policy Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., POL-2024-5403"
+                    value={formData.policyNo}
+                    onChange={(e) => setFormData({ ...formData, policyNo: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 font-semibold"
+                >
+                  {loading ? 'Adding...' : 'Add Patient'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(false)}
+                  className="px-6 py-2 bg-gray-300 text-gray-900 rounded-md hover:bg-gray-400 font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="mb-6 bg-white p-6 rounded-lg shadow">
@@ -215,7 +374,7 @@ export default function PatientsList() {
                                 <tr
                                   key={claim.id}
                                   className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} cursor-pointer hover:bg-teal-50`}
-                                  onClick={() => router.push(`/?claimId=${claim.id}`)}
+                                  onClick={() => router.push(`/claims/new?claimId=${claim.id}`)}
                                   title="Open this claim as prefilled form"
                                 >
                                   <td className="px-4 py-2 border-b text-gray-700">
@@ -233,7 +392,7 @@ export default function PatientsList() {
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation()
-                                        router.push(`/?claimId=${claim.id}`)
+                                        router.push(`/claims/new?claimId=${claim.id}`)
                                       }}
                                       className="mr-2 inline-flex items-center rounded bg-teal-600 px-2 py-1 text-xs font-semibold text-white hover:bg-teal-700"
                                     >
@@ -244,10 +403,21 @@ export default function PatientsList() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
-                                      className="inline-flex items-center rounded bg-indigo-600 px-2 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                                      className="mr-2 inline-flex items-center rounded bg-indigo-600 px-2 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
                                     >
                                       Download PDF
                                     </a>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        deleteClaim(claim.id, patient.name)
+                                      }}
+                                      disabled={loading}
+                                      className="inline-flex items-center rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:bg-gray-400"
+                                    >
+                                      Delete
+                                    </button>
                                   </td>
                                 </tr>
                               ))}
@@ -256,6 +426,18 @@ export default function PatientsList() {
                         </div>
                       </div>
                     )}
+                    
+                    {/* Delete Patient Button */}
+                    <div className="mt-6 pt-4 border-t border-gray-300">
+                      <button
+                        type="button"
+                        onClick={() => deletePatient(patient.id, patient.name)}
+                        disabled={loading}
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 font-semibold text-sm"
+                      >
+                        {loading ? 'Deleting...' : 'Delete Patient & All Claims'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

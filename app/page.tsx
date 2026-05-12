@@ -1,12 +1,10 @@
-import ClaimForm from '@/components/ClaimForm'
-import { Suspense } from 'react'
+import PatientsList from '@/components/PatientsList'
+
+export const metadata = {
+  title: 'Almadallah Claims Management',
+  description: 'Healthcare claim form management system',
+}
 
 export default function Home() {
-  return (
-    <main>
-      <Suspense fallback={<div className="p-6 text-sm text-slate-600">Loading claim form...</div>}>
-        <ClaimForm />
-      </Suspense>
-    </main>
-  )
+  return <PatientsList />
 }
