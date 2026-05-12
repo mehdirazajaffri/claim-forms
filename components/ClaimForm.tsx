@@ -233,7 +233,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
   const searchPatient = async () => {
     const query = cardNumber.trim().toLowerCase()
     if (!query) {
-      setSearchFeedback('Enter a patient name or card number to search.')
+      setSearchFeedback('Enter a patient name or Emirates ID to search.')
       return
     }
 
@@ -401,11 +401,11 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
 
           <div className="mt-5 flex flex-col gap-3 md:flex-row">
             <div className="field-shell flex-1">
-              <label className="field-label" htmlFor="claim-patient-search">Patient name or card number</label>
+              <label className="field-label" htmlFor="claim-patient-search">Patient name or Emirates ID</label>
               <input
                 id="claim-patient-search"
                 type="text"
-                placeholder="Enter patient name or card number"
+                placeholder="Enter patient name or Emirates ID"
                 value={cardNumber}
                 onChange={(e) => setCardNumber(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && searchPatient()}
@@ -545,7 +545,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
           <div className="bg-amber-200 px-4 py-2 font-bold text-xs text-gray-900 mb-0 border border-gray-400">PATIENT INFORMATION</div>
           <div className="border-l border-r border-b border-gray-400 p-4">
             <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-900 mb-2">Patient&apos;s Name(as on card):</label>
+              <label className="block text-xs font-semibold text-gray-900 mb-2">Patient&apos;s Name (as on ID):</label>
               <input
                 type="text"
                 {...register('name')}
@@ -555,7 +555,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
             {/* Card, Policy, BirthDate, Sex in one row */}
             <div className="grid grid-cols-4 gap-0 border border-gray-400">
               <div className="border-r border-gray-400 p-3">
-                <label className="block text-xs font-semibold text-gray-900 mb-1">Card #</label>
+                <label className="block text-xs font-semibold text-gray-900 mb-1">Emirates ID</label>
                 <input
                   type="text"
                   {...register('cardNumber')}

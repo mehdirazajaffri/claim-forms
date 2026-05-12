@@ -123,7 +123,7 @@ export default function PatientsList() {
     e.preventDefault()
 
     if (!formData.cardNumber.trim() || !formData.name.trim()) {
-      setStatus({ tone: 'danger', text: 'Card number and patient name are required before saving.' })
+      setStatus({ tone: 'danger', text: 'Emirates ID and patient name are required before saving.' })
       return
     }
 
@@ -217,11 +217,11 @@ export default function PatientsList() {
 
               <form onSubmit={handleAddPatient} className="mt-5 space-y-4">
                 <div className="field-shell">
-                  <label className="field-label" htmlFor="card-number">Card Number *</label>
+                  <label className="field-label" htmlFor="card-number">Emirates ID *</label>
                   <input
                     id="card-number"
                     type="text"
-                    placeholder="AMS-2026-003"
+                    placeholder="784-1990-1234567-8"
                     value={formData.cardNumber}
                     onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
                     className="field-input"
@@ -311,7 +311,7 @@ export default function PatientsList() {
               <input
                 id="patient-search"
                 type="text"
-                placeholder="Start typing a card number, patient name, or policy number"
+                placeholder="Start typing an Emirates ID, patient name, or policy number"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="field-input"
