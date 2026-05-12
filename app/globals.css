@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--app-bg: #f3f5f7;
+	--panel-bg: #ffffff;
+	--ink: #1c2430;
+	--muted: #5a6575;
+	--brand: #0f766e;
+	--brand-strong: #115e59;
+	--accent: #a16207;
+	--line: #ced4dd;
+}
+
+html,
+body {
+	font-family: var(--font-body), 'IBM Plex Sans', sans-serif;
+	background:
+		radial-gradient(circle at 8% 10%, rgba(15, 118, 110, 0.08), transparent 30%),
+		radial-gradient(circle at 90% 10%, rgba(161, 98, 7, 0.08), transparent 35%),
+		var(--app-bg);
+	color: var(--ink);
+}
+
+.claim-paper {
+	background: var(--panel-bg);
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	box-shadow: 0 14px 34px rgba(18, 26, 39, 0.08);
+	font-family: 'IBM Plex Sans', Arial, sans-serif;
+	font-size: 13px;
+}

@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id        String     @id @default(cuid())
+  cardNumber String    @unique
+  name      String
+  birthDate String?
+  sex       String?
+  policyNo  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  claims    Claim[]
+}
+
+model Claim {
+  id                    String     @id @default(cuid())
+  patientId             String
+  patient               Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  // Patient Information
+  date                  String?
+  provider              String?
+  
+  // Information Section
+  serviceDate           String?
+  symptoms              String?
+  preExistingCondition  Boolean @default(false)
+  chronicMedications    Boolean @default(false)
+  familyHistory         Boolean @default(false)
+  additionalNotes       String?
+  
+  // Objective/Assessment Section
+  clinicalFindings      String?
+  cause                 String? // Accident, Dental, Maternity, Physical Illness, Preventive, Psychiatry, Work Related
+  otherCause            String?
+  assessmentAcute       Boolean @default(false)
+  assessmentChronic     Boolean @default(false)
+  assessmentConfirmed   Boolean @default(false)
+  assessmentSuspected   Boolean @default(false)
+  comments              String?
+  
+  // Medical Plan Section
+  consultation          Boolean @default(false)
+  physiotherapy         Boolean @default(false)
+  laboratory            Boolean @default(false)
+  radiology             Boolean @default(false)
+  pharmacy              Boolean @default(false)
+  otherMedical          String?
+  preAuthorizationRequired Boolean @default(false)
+  preAuthorizationDetails String?
+  proposedTreatment     String?
+  estimatedCost         String?
+  
+  // In-Patient Section
+  lengthOfStay          String?
+  inPatientProvider     String?
+  inPatientCost         String?
+  
+  // Physician Info
+  treatingPhysicianName String?
+  telFax                String?
+  signature             String? // Could store base64 or path
+  
+  // Almadallah Use Only
+  approvedTariff        Boolean @default(false)
+  approvalCode          String?
+  
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+}
