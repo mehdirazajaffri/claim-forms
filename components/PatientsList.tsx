@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import ConfirmDialog from './ConfirmDialog'
 
 interface Claim {
   id: string
@@ -24,6 +25,18 @@ interface Patient {
   claims: Claim[]
 }
 
+type StatusTone = 'success' | 'danger' | 'neutral'
+
+interface StatusState {
+  tone: StatusTone
+  text: string
+}
+
+interface PendingClaimDeletion {
+  claimId: string
+  patientName: string
+}
+
 export default function PatientsList() {
   const router = useRouter()
   const [patients, setPatients] = useState<Patient[]>([])
@@ -32,6 +45,8 @@ export default function PatientsList() {
   const [loading, setLoading] = useState(true)
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [status, setStatus] = useState<StatusState | null>(null)
+  const [pendingClaimDeletion, setPendingClaimDeletion] = useState<PendingClaimDeletion | null>(null)
   const [formData, setFormData] = useState({
     cardNumber: '',
     name: '',
@@ -52,6 +67,7 @@ export default function PatientsList() {
       setFilteredPatients(response.data)
     } catch (error) {
       console.error('Failed to fetch patients:', error)
+      setStatus({ tone: 'danger', text: 'Unable to load patients right now. Please refresh and try again.' })
     } finally {
       setLoading(false)
     }
@@ -72,15 +88,15 @@ export default function PatientsList() {
   }
 
   const deleteClaim = async (claimId: string, patientName: string) => {
-    if (!confirm(`Delete claim? This action cannot be undone.`)) return
-
     try {
       setLoading(true)
       await axios.delete(`/api/claims/${claimId}`)
+      setPendingClaimDeletion(null)
+      setStatus({ tone: 'success', text: `Claim removed for ${patientName}.` })
       fetchPatients()
     } catch (error) {
       console.error('Failed to delete claim:', error)
-      alert('Error deleting claim. Please try again.')
+      setStatus({ tone: 'danger', text: 'Error deleting claim. Please try again.' })
     } finally {
       setLoading(false)
     }
@@ -93,10 +109,11 @@ export default function PatientsList() {
       setLoading(true)
       await axios.delete(`/api/patients/${patientId}`)
       setExpandedPatient(null)
+      setStatus({ tone: 'success', text: `${patientName} and all related claims were deleted.` })
       fetchPatients()
     } catch (error) {
       console.error('Failed to delete patient:', error)
-      alert('Error deleting patient. Please try again.')
+      setStatus({ tone: 'danger', text: 'Error deleting patient. Please try again.' })
     } finally {
       setLoading(false)
     }
@@ -104,9 +121,9 @@ export default function PatientsList() {
 
   const handleAddPatient = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.cardNumber.trim() || !formData.name.trim()) {
-      alert('Card Number and Name are required')
+      setStatus({ tone: 'danger', text: 'Card number and patient name are required before saving.' })
       return
     }
 
@@ -119,332 +136,456 @@ export default function PatientsList() {
         sex: formData.sex || null,
         policyNo: formData.policyNo.trim() || null,
       })
+
       setFormData({ cardNumber: '', name: '', birthDate: '', sex: '', policyNo: '' })
       setShowAddForm(false)
+      setStatus({ tone: 'success', text: 'Patient created successfully and added to the patient list.' })
       fetchPatients()
-      alert('Patient added successfully!')
     } catch (error: any) {
       console.error('Failed to add patient:', error)
-      const errorMsg = error.response?.data?.error || 'Failed to add patient'
-      alert(errorMsg)
+      const errorMsg = error.response?.data?.error || 'Failed to add patient.'
+      setStatus({ tone: 'danger', text: errorMsg })
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6 rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50 via-white to-amber-50 px-6 py-5 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900 [font-family:var(--font-display),sans-serif]">Patients Registry</h1>
-          <p className="text-sm text-slate-600 mt-1">Search patients instantly, inspect claim history, and download any claim PDF.</p>
-        </div>
+  const statusClassName =
+    status?.tone === 'success'
+      ? 'notice-success'
+      : status?.tone === 'danger'
+        ? 'notice-danger'
+        : 'notice-neutral'
 
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Patient Records</h2>
-            <p className="text-gray-600 mt-1">View and manage all patients and their claims</p>
+  const formatDate = (value?: string) => {
+    if (!value) return 'Not provided'
+    return new Date(value).toLocaleDateString()
+  }
+
+  const summarizeSymptoms = (symptoms?: string) => {
+    if (!symptoms) return 'No notes provided'
+    return symptoms.length > 56 ? `${symptoms.slice(0, 56)}...` : symptoms
+  }
+
+  return (
+    <div className="space-y-6">
+      <ConfirmDialog
+        open={Boolean(pendingClaimDeletion)}
+        title="Delete claim?"
+        description={pendingClaimDeletion ? `Delete claim for ${pendingClaimDeletion.patientName}? This action cannot be undone.` : ''}
+        busy={loading}
+        onCancel={() => setPendingClaimDeletion(null)}
+        onConfirm={() => {
+          if (!pendingClaimDeletion) return
+          deleteClaim(pendingClaimDeletion.claimId, pendingClaimDeletion.patientName)
+        }}
+      />
+
+      <section className="hero-panel px-6 py-7 md:px-8 md:py-8">
+        <div className="space-y-4">
+          <div className="eyebrow">Claims operations dashboard</div>
+          <div className="space-y-3">
+            <h1 className="section-title text-slate-950">Patient list, claim intake, and document access in one workspace.</h1>
+            <p className="max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
+              Review patients, open prior claims as templates, add new members, and move straight into claim submission without losing context.
+            </p>
           </div>
-          <div className="flex gap-3">
-            <Link
-              href="/claims/new"
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-            >
-              + Create Claim
+
+          <div className="flex flex-wrap gap-3">
+            <Link href="/claims/new" className="button-primary">
+              Create Claim
             </Link>
             <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
+              type="button"
+              onClick={() => setShowAddForm((current) => !current)}
+              className="button-secondary"
             >
-              {showAddForm ? '✕ Cancel' : '+ Add Patient'}
+              {showAddForm ? 'Hide Patient Form' : 'Create Patient'}
             </button>
           </div>
         </div>
+      </section>
 
-        {/* Add Patient Form */}
-        {showAddForm && (
-          <div className="mb-6 bg-white p-6 rounded-lg shadow border-l-4 border-green-600">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Patient</h3>
-            <form onSubmit={handleAddPatient}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-1">Card Number *</label>
+      {status && <div className={statusClassName}>{status.text}</div>}
+
+      <section className="space-y-6">
+        <div className="space-y-6">
+          {showAddForm && (
+            <section className="surface-card p-6">
+              <div className="eyebrow">Create patient</div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Patient form</h2>
+
+              <form onSubmit={handleAddPatient} className="mt-5 space-y-4">
+                <div className="field-shell">
+                  <label className="field-label" htmlFor="card-number">Card Number *</label>
                   <input
+                    id="card-number"
                     type="text"
-                    placeholder="e.g., AMS-2026-003"
+                    placeholder="AMS-2026-003"
                     value={formData.cardNumber}
                     onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="field-input"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-1">Full Name *</label>
+                <div className="field-shell">
+                  <label className="field-label" htmlFor="patient-name">Full Name *</label>
                   <input
+                    id="patient-name"
                     type="text"
-                    placeholder="e.g., John Smith"
+                    placeholder="Fatima Al-Mansouri"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="field-input"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-1">Birth Date</label>
-                  <input
-                    type="date"
-                    aria-label="Birth Date"
-                    value={formData.birthDate}
-                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="field-shell">
+                    <label className="field-label" htmlFor="patient-birthdate">Birth Date</label>
+                    <input
+                      id="patient-birthdate"
+                      type="date"
+                      value={formData.birthDate}
+                      onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                      className="field-input"
+                    />
+                  </div>
+                  <div className="field-shell">
+                    <label className="field-label" htmlFor="patient-sex">Sex</label>
+                    <select
+                      id="patient-sex"
+                      value={formData.sex}
+                      onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+                      className="field-select"
+                    >
+                      <option value="">Select</option>
+                      <option value="M">Male</option>
+                      <option value="F">Female</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-1">Sex</label>
-                  <select
-                    aria-label="Sex"
-                    value={formData.sex}
-                    onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="">Select...</option>
-                    <option value="M">Male</option>
-                    <option value="F">Female</option>
-                  </select>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-900 mb-1">Policy Number</label>
+                <div className="field-shell">
+                  <label className="field-label" htmlFor="policy-number">Policy Number</label>
                   <input
+                    id="policy-number"
                     type="text"
-                    placeholder="e.g., POL-2024-5403"
+                    placeholder="POL-2024-5403"
                     value={formData.policyNo}
                     onChange={(e) => setFormData({ ...formData, policyNo: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="field-input"
                   />
                 </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 font-semibold"
-                >
-                  {loading ? 'Adding...' : 'Add Patient'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="px-6 py-2 bg-gray-300 text-gray-900 rounded-md hover:bg-gray-400 font-semibold"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Search Bar */}
-        <div className="mb-6 bg-white p-6 rounded-lg shadow">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">Search Patients</label>
-          <input
-            type="text"
-            placeholder="Search by card number, name, or policy number..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {searchTerm && (
-            <p className="text-sm text-gray-600 mt-2">
-              Found <strong>{filteredPatients.length}</strong> patient{filteredPatients.length !== 1 ? 's' : ''}
-            </p>
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <button type="submit" disabled={loading} className="button-primary">
+                    {loading ? 'Saving...' : 'Save Patient'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ cardNumber: '', name: '', birthDate: '', sex: '', policyNo: '' })}
+                    className="button-secondary"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </form>
+            </section>
           )}
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">Total Patients</div>
-            <div className="text-3xl font-bold text-gray-900">{patients.length}</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">Total Claims</div>
-            <div className="text-3xl font-bold text-gray-900">
-              {patients.reduce((sum, p) => sum + (p.claims?.length || 0), 0)}
+          <div className="surface-card p-6 md:p-7">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <div className="eyebrow">Patient search</div>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Find a patient by card, name, or policy number</h2>
+                <p className="mt-2 text-sm text-slate-600">The patient list updates live as you type, so you can jump into an existing profile quickly.</p>
+              </div>
+              {searchTerm && (
+                <button type="button" onClick={() => handleSearch('')} className="button-secondary">
+                  Clear Search
+                </button>
+              )}
+            </div>
+
+            <div className="mt-5 field-shell">
+              <label className="field-label" htmlFor="patient-search">Search patients</label>
+              <input
+                id="patient-search"
+                type="text"
+                placeholder="Start typing a card number, patient name, or policy number"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="field-input"
+              />
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">Displayed</div>
-            <div className="text-3xl font-bold text-gray-900">{filteredPatients.length}</div>
+
+          <div className="space-y-4">
+            {loading ? (
+              <div className="surface-card px-6 py-10 text-center text-sm text-slate-600">Loading patients...</div>
+            ) : filteredPatients.length === 0 ? (
+              <div className="surface-card px-6 py-10 text-center">
+                <h3 className="text-xl font-semibold text-slate-950">{patients.length === 0 ? 'No patients yet' : 'No matching patients found'}</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  {patients.length === 0
+                    ? 'Create the first patient profile to start managing claims.'
+                    : 'Try a broader search term or clear the filter to return to the full patient list.'}
+                </p>
+              </div>
+            ) : (
+              filteredPatients.map((patient) => (
+                <article key={patient.id} className="surface-card overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(patient.id)}
+                    className="flex w-full flex-col gap-4 px-6 py-5 text-left transition hover:bg-slate-50 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Patient profile</div>
+                        <h3 className="mt-1 text-xl font-semibold text-slate-950">{patient.name}</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-sm text-slate-600">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">Card {patient.cardNumber}</span>
+                        {patient.policyNo && <span className="rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-800">Policy {patient.policyNo}</span>}
+                        <span className="rounded-full bg-teal-50 px-3 py-1 font-medium text-teal-800">{patient.claims?.length || 0} claims</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-right text-sm text-slate-500">
+                        <div>Member since</div>
+                        <div className="font-semibold text-slate-900">{formatDate(patient.createdAt)}</div>
+                      </div>
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold text-slate-500">
+                        {expandedPatient === patient.id ? '−' : '+'}
+                      </div>
+                    </div>
+                  </button>
+
+                  {expandedPatient === patient.id && (
+                    <div className="border-t border-slate-200 bg-slate-50/70 px-4 py-5 sm:px-6 sm:py-6">
+                      <div className="grid gap-6 2xl:grid-cols-[320px_minmax(0,1fr)]">
+                        <div className="space-y-4">
+                          <div className="surface-card p-5">
+                            <div className="eyebrow">Patient detail</div>
+                            <div className="mt-4 grid gap-4 xl:grid-cols-2 2xl:grid-cols-1">
+                              <div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Full name</div>
+                                <div className="mt-1 font-semibold text-slate-950">{patient.name}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Card number</div>
+                                <div className="mt-1 font-semibold text-slate-950">{patient.cardNumber}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Birth date</div>
+                                <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.birthDate)}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sex</div>
+                                <div className="mt-1 font-semibold text-slate-950">{patient.sex ? (patient.sex === 'M' ? 'Male' : 'Female') : 'Not provided'}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Policy number</div>
+                                <div className="mt-1 font-semibold text-slate-950">{patient.policyNo || 'Not provided'}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Member since</div>
+                                <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.createdAt)}</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="surface-card p-5">
+                            <div className="eyebrow">Actions</div>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              <Link href={`/claims/new?patientId=${patient.id}`} className="button-primary">
+                                New Claim
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() => deletePatient(patient.id, patient.name)}
+                                disabled={loading}
+                                className="button-danger"
+                              >
+                                {loading ? 'Working...' : 'Delete Patient'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="surface-card p-5 min-w-0">
+                          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                            <div>
+                              <div className="eyebrow">Claim history</div>
+                              <h4 className="mt-2 text-xl font-semibold text-slate-950">{patient.claims?.length || 0} claims available for reuse or printing</h4>
+                            </div>
+                          </div>
+
+                          {patient.claims && patient.claims.length > 0 ? (
+                            <>
+                              <div className="mt-5 hidden overflow-x-auto xl:block">
+                                <table className="min-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-sm">
+                                <thead className="bg-slate-100 text-slate-600">
+                                  <tr>
+                                    <th className="px-4 py-3 text-left font-semibold">Date</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Clinical note</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Reason</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {patient.claims.map((claim, idx) => (
+                                    <tr
+                                      key={claim.id}
+                                      className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}
+                                      onClick={() => router.push(`/claims/new?claimId=${claim.id}`)}
+                                      title="Open this claim as a prefilled template"
+                                    >
+                                      <td className="px-4 py-4 align-top text-slate-700">{formatDate(claim.date || claim.createdAt)}</td>
+                                      <td className="px-4 py-4 align-top text-slate-700">{summarizeSymptoms(claim.symptoms)}</td>
+                                      <td className="px-4 py-4 align-top text-slate-700">{claim.cause || 'General'}</td>
+                                      <td className="px-4 py-4 align-top">
+                                        <div className="claim-actions">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              router.push(`/claims/new?claimId=${claim.id}`)
+                                            }}
+                                            className="claim-action-btn claim-action-btn--open"
+                                            aria-label="Open claim template"
+                                            title="Open template"
+                                          >
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                              <path d="M7 17L17 7" />
+                                              <path d="M9 7h8v8" />
+                                            </svg>
+                                          </button>
+                                          <a
+                                            href={`/print/${claim.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="claim-action-btn claim-action-btn--print"
+                                            aria-label="Print claim PDF"
+                                            title="Print / PDF"
+                                          >
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                              <path d="M6 9V4h12v5" />
+                                              <rect x="6" y="14" width="12" height="6" rx="1" />
+                                              <rect x="4" y="9" width="16" height="7" rx="2" />
+                                            </svg>
+                                          </a>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              setPendingClaimDeletion({ claimId: claim.id, patientName: patient.name })
+                                            }}
+                                            disabled={loading}
+                                            className="claim-action-btn claim-action-btn--delete"
+                                            aria-label="Delete claim"
+                                            title="Delete claim"
+                                          >
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                              <path d="M3 6h18" />
+                                              <path d="M8 6V4h8v2" />
+                                              <path d="M19 6l-1 14H6L5 6" />
+                                              <path d="M10 11v6" />
+                                              <path d="M14 11v6" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                                </table>
+                              </div>
+
+                              <div className="mt-5 space-y-3 xl:hidden">
+                                {patient.claims.map((claim) => (
+                                  <div
+                                    key={claim.id}
+                                    className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-teal-300 hover:bg-teal-50/40"
+                                  >
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                      <div className="space-y-2">
+                                        <div className="text-sm font-semibold text-slate-950">{formatDate(claim.date || claim.createdAt)}</div>
+                                        <div className="text-sm text-slate-600">{summarizeSymptoms(claim.symptoms)}</div>
+                                        <div className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
+                                          {claim.cause || 'General'}
+                                        </div>
+                                      </div>
+
+                                      <div className="claim-actions sm:max-w-[280px] sm:justify-end">
+                                        <button
+                                          type="button"
+                                          onClick={() => router.push(`/claims/new?claimId=${claim.id}`)}
+                                          className="claim-action-btn claim-action-btn--open"
+                                          aria-label="Open claim template"
+                                          title="Open template"
+                                        >
+                                          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M7 17L17 7" />
+                                            <path d="M9 7h8v8" />
+                                          </svg>
+                                        </button>
+                                        <a
+                                          href={`/print/${claim.id}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="claim-action-btn claim-action-btn--print"
+                                          aria-label="Print claim PDF"
+                                          title="Print / PDF"
+                                        >
+                                          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M6 9V4h12v5" />
+                                            <rect x="6" y="14" width="12" height="6" rx="1" />
+                                            <rect x="4" y="9" width="16" height="7" rx="2" />
+                                          </svg>
+                                        </a>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setPendingClaimDeletion({ claimId: claim.id, patientName: patient.name })
+                                          }}
+                                          disabled={loading}
+                                          className="claim-action-btn claim-action-btn--delete"
+                                          aria-label="Delete claim"
+                                          title="Delete claim"
+                                        >
+                                          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M3 6h18" />
+                                            <path d="M8 6V4h8v2" />
+                                            <path d="M19 6l-1 14H6L5 6" />
+                                            <path d="M10 11v6" />
+                                            <path d="M14 11v6" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
+                              <h5 className="text-lg font-semibold text-slate-950">No claims recorded yet</h5>
+                              <p className="mt-2 text-sm text-slate-600">Create the first claim for this patient to start building reusable history.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </article>
+              ))
+            )}
           </div>
         </div>
-
-        {/* Patients List */}
-        {loading ? (
-          <div className="bg-white p-8 rounded-lg shadow text-center">
-            <p className="text-gray-600">Loading patients...</p>
-          </div>
-        ) : filteredPatients.length === 0 ? (
-          <div className="bg-white p-8 rounded-lg shadow text-center">
-            <p className="text-gray-600 text-lg">
-              {patients.length === 0 ? 'No patients found' : 'No patients match your search'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredPatients.map((patient) => (
-              <div key={patient.id} className="bg-white rounded-lg border border-slate-200 shadow hover:shadow-lg transition">
-                <button
-                  onClick={() => toggleExpanded(patient.id)}
-                  className="w-full px-6 py-4 text-left hover:bg-gray-50 flex justify-between items-center"
-                >
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-900 text-lg">{patient.name}</div>
-                    <div className="text-sm text-gray-600 mt-1 space-x-3">
-                      <span>
-                        <strong>Card:</strong> {patient.cardNumber}
-                      </span>
-                      {patient.policyNo && (
-                        <span>
-                          <strong>Policy:</strong> {patient.policyNo}
-                        </span>
-                      )}
-                      <span>
-                        <strong>Claims:</strong> {patient.claims?.length || 0}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-gray-400">
-                    {expandedPatient === patient.id ? '▼' : '▶'}
-                  </div>
-                </button>
-
-                {/* Expanded Details */}
-                {expandedPatient === patient.id && (
-                  <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600">Full Name</label>
-                        <p className="text-gray-900 font-medium">{patient.name}</p>
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600">Card Number</label>
-                        <p className="text-gray-900 font-medium">{patient.cardNumber}</p>
-                      </div>
-                      {patient.birthDate && (
-                        <div>
-                          <label className="text-xs font-semibold text-gray-600">Birth Date</label>
-                          <p className="text-gray-900 font-medium">{patient.birthDate}</p>
-                        </div>
-                      )}
-                      {patient.sex && (
-                        <div>
-                          <label className="text-xs font-semibold text-gray-600">Sex</label>
-                          <p className="text-gray-900 font-medium">{patient.sex === 'M' ? 'Male' : 'Female'}</p>
-                        </div>
-                      )}
-                      {patient.policyNo && (
-                        <div>
-                          <label className="text-xs font-semibold text-gray-600">Policy Number</label>
-                          <p className="text-gray-900 font-medium">{patient.policyNo}</p>
-                        </div>
-                      )}
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600">Member Since</label>
-                        <p className="text-gray-900 font-medium">{new Date(patient.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-
-                    {/* Claims Table */}
-                    {patient.claims && patient.claims.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-3">Claim History ({patient.claims.length})</h3>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm border border-gray-300 rounded">
-                            <thead className="bg-gray-200">
-                              <tr>
-                                <th className="px-4 py-2 text-left text-gray-900 font-semibold border-b">Date</th>
-                                <th className="px-4 py-2 text-left text-gray-900 font-semibold border-b">Symptoms / Cause</th>
-                                <th className="px-4 py-2 text-left text-gray-900 font-semibold border-b">Reason</th>
-                                <th className="px-4 py-2 text-left text-gray-900 font-semibold border-b">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {patient.claims.map((claim, idx) => (
-                                <tr
-                                  key={claim.id}
-                                  className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} cursor-pointer hover:bg-teal-50`}
-                                  onClick={() => router.push(`/claims/new?claimId=${claim.id}`)}
-                                  title="Open this claim as prefilled form"
-                                >
-                                  <td className="px-4 py-2 border-b text-gray-700">
-                                    {new Date(claim.date || claim.createdAt).toLocaleDateString()}
-                                  </td>
-                                  <td className="px-4 py-2 border-b text-gray-700">
-                                    {claim.symptoms?.substring(0, 40)}
-                                    {claim.symptoms && claim.symptoms.length > 40 ? '...' : ''}
-                                  </td>
-                                  <td className="px-4 py-2 border-b text-gray-700">
-                                    {claim.cause || 'General'}
-                                  </td>
-                                  <td className="px-4 py-2 border-b text-gray-700">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        router.push(`/claims/new?claimId=${claim.id}`)
-                                      }}
-                                      className="mr-2 inline-flex items-center rounded bg-teal-600 px-2 py-1 text-xs font-semibold text-white hover:bg-teal-700"
-                                    >
-                                      Open
-                                    </button>
-                                    <a
-                                      href={`/print/${claim.id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="mr-2 inline-flex items-center rounded bg-indigo-600 px-2 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
-                                    >
-                                      Download PDF
-                                    </a>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        deleteClaim(claim.id, patient.name)
-                                      }}
-                                      disabled={loading}
-                                      className="inline-flex items-center rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:bg-gray-400"
-                                    >
-                                      Delete
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Delete Patient Button */}
-                    <div className="mt-6 pt-4 border-t border-gray-300">
-                      <button
-                        type="button"
-                        onClick={() => deletePatient(patient.id, patient.name)}
-                        disabled={loading}
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 font-semibold text-sm"
-                      >
-                        {loading ? 'Deleting...' : 'Delete Patient & All Claims'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      </section>
     </div>
   )
 }

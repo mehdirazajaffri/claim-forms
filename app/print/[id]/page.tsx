@@ -94,29 +94,31 @@ export default function PrintClaimPage() {
 
   const cause = useMemo(() => (claim?.cause || '').toLowerCase(), [claim?.cause])
 
-  if (loading) return <div className="page-state">Loading print view...</div>
-  if (error || !claim) return <div className="page-state">{error || 'Claim not found.'}</div>
-
   return (
     <>
-      <div className="toolbar no-print">
-        <button className="primary" onClick={() => window.print()}>Download PDF</button>
-        <button onClick={() => window.print()}>Print / Save as PDF</button>
-        <Link href={`/?claimId=${claim.id}`} className="btn-link">Back to Form</Link>
-        <small>Use Print dialog and choose Save as PDF.</small>
-      </div>
+      {loading && <div className="page-state">Loading print view...</div>}
+      {!loading && (error || !claim) && <div className="page-state">{error || 'Claim not found.'}</div>}
 
-      <div className="page-wrap">
-        <div className="page" id="formPage">
-          <div className="top">
-            <div className="logo-block">
-              <img src="/logo_original.svg" alt="ALMADALLAH" className="logo-image" />
-            </div>
-            <div className="title">Claim Form</div>
-            <div className="no">No.<span className="no-val">{claim.id.slice(-6).toUpperCase()}</span></div>
+      {!loading && !error && claim && (
+        <>
+          <div className="toolbar no-print">
+            <button className="primary" onClick={() => window.print()}>Download PDF</button>
+            <Link href={`/claims/new?claimId=${claim.id}`} className="btn-link back-btn" title="Close">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </Link>
           </div>
 
-          <table className="form" aria-label="Claim form print layout">
+          <div className="page-wrap">
+            <div className="page" id="formPage">
+              <div className="top">
+                <div className="logo-block">
+                  <img src="/logo_original.svg" alt="ALMADALLAH" className="logo-image" />
+                </div>
+                <div className="title">Claim Form</div>
+                <div className="no">No.<span className="no-val">{claim.id.slice(-6).toUpperCase()}</span></div>
+              </div>
+
+              <table className="form" aria-label="Claim form print layout">
             <colgroup>
               {Array.from({ length: 12 }).map((_, idx) => (
                 <col key={idx} className="col-fixed" />
@@ -145,8 +147,16 @@ export default function PrintClaimPage() {
                 <td colSpan={6} className="subsection right-note">To be completed by physician</td>
               </tr>
               <tr className="row-lg">
-                <td colSpan={3}><span className="label">Service<br />Date</span><div>{fmtDate(claim.serviceDate)}</div></td>
-                <td colSpan={9}><span className="label">Symptom(s) as described by patient:</span><div className="pre">{claim.symptoms || ''}</div></td>
+                <td colSpan={3} style={{verticalAlign:'top'}}>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                    <span className="label">Service<br />Date</span>
+                    <span>{fmtDate(claim.serviceDate)}</span>
+                  </div>
+                </td>
+                <td colSpan={9}>
+                  <div className="label">Symptom(s) as described by patient:</div>
+                  <div className="pre">{claim.symptoms || ''}</div>
+                </td>
               </tr>
               <tr className="row-xl">
                 <td colSpan={6}>
@@ -255,28 +265,33 @@ export default function PrintClaimPage() {
                 <td colSpan={4}><span className="label">Date</span> {fmtDate(claim.date)}</td>
               </tr>
             </tbody>
-          </table>
-        </div>
-      </div>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       <style jsx>{`
-        :global(body){ margin:0; background:#efefef; font-family: Arial, Helvetica, sans-serif; color:#2a2a2a; }
+        :global(body){ margin:0; background:#fff; font-family: Arial, Helvetica, sans-serif; color:#2a2a2a; }
+        :global(.app-header){ display:none !important; }
+        :global(.app-main){ padding:0 !important; }
+        :global(.app-main__inner){ max-width:none !important; padding:0 !important; }
         .toolbar{ position:sticky; top:0; z-index:20; background:white; border-bottom:1px solid #ddd; padding:10px 14px; display:flex; gap:10px; align-items:center; }
         .toolbar button, .btn-link{ border:1px solid #cfcfcf; background:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; color:#111; text-decoration:none; }
         .toolbar button.primary{ background:#111827; color:#fff; border-color:#111827; }
-        .toolbar small{ color:#6b7280; margin-left:auto; }
+        .back-btn{ margin-left:auto; display:flex; align-items:center; justify-content:center; width:38px; height:38px; padding:0; }
         .page-state{ padding:24px; }
         .page-wrap{ padding:0; display:flex; justify-content:center; }
-        .page{ width:210mm; min-height:297mm; background:#f3f3f3; border:none; box-shadow:none; padding:8mm 8mm 9mm; box-sizing:border-box; }
+        .page{ width:210mm; min-height:297mm; background:#fff; border:none; box-shadow:none; padding:8mm 8mm 9mm; box-sizing:border-box; }
         .top{ display:grid; grid-template-columns:1fr auto 1fr; align-items:start; column-gap:8px; margin-bottom:2mm; }
         .logo-block{ display:flex; align-items:flex-start; margin-top:2px; }
         .logo-image{ height:52px; width:auto; object-fit:contain; }
         .title{ text-align:center; font-weight:700; font-size:22px; line-height:1.1; margin-top:6px; color:#2b2b2b; }
         .no{ text-align:right; font-size:13px; font-weight:700; margin-top:8px; }
         .no-val{ display:block; font-size:10px; font-weight:700; letter-spacing:0.3px; margin-top:2px; }
-        table.form{ width:100%; border-collapse:collapse; margin-top:1mm; font-size:11px; table-layout:fixed; }
+        table.form{ width:100%; border-collapse:collapse; margin-top:1mm; font-size:11px; table-layout:fixed; border:1.5px solid #2b2b2b; }
         :global(col.col-fixed){ width:8.333%; }
-        table.form td{ border:1px solid #cfcfcf; vertical-align:top; padding:4px 10px; word-break:break-word; background:#f3f3f3; }
+        table.form td{ border:1px solid #cfcfcf; vertical-align:top; padding:4px 10px; word-break:break-word; background:#fff; }
         .top-row td{ padding-top:6px; padding-bottom:6px; }
         .row-md td{ min-height:25px; }
         .row-lg td{ min-height:46px; }
@@ -300,7 +315,7 @@ export default function PrintClaimPage() {
           :global(body){ background:#fff; }
           .toolbar{ display:none !important; }
           .page-wrap{ padding:0; }
-          .page{ box-shadow:none; width:auto; min-height:auto; padding:8mm 8mm 9mm; border:3px solid #1f1f1f; }
+          .page{ box-shadow:none; width:auto; min-height:auto; padding:8mm 8mm 9mm; border:none; background:#fff; }
         }
       `}</style>
     </>

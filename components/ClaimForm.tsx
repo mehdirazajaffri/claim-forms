@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
+import ConfirmDialog from './ConfirmDialog'
 
 type ClaimRecord = Partial<FormData> & {
   id: string
@@ -68,12 +70,14 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
   const searchParams = useSearchParams()
   const [patient, setPatient] = useState<Patient | null>(null)
   const [patients, setPatients] = useState<Patient[]>([])
+  const [patientMatches, setPatientMatches] = useState<Patient[]>([])
   const [cardNumber, setCardNumber] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [lastSavedClaimId, setLastSavedClaimId] = useState<string | null>(null)
   const [searchFeedback, setSearchFeedback] = useState('')
   const [submitError, setSubmitError] = useState('')
+  const [pendingClaimDeletion, setPendingClaimDeletion] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPatients()
@@ -81,9 +85,16 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
 
   useEffect(() => {
     const claimId = searchParams.get('claimId')
-    if (!claimId) return
+    const patientId = searchParams.get('patientId')
 
-    loadClaimById(claimId)
+    if (claimId) {
+      loadClaimById(claimId)
+      return
+    }
+
+    if (patientId) {
+      loadPatientById(patientId)
+    }
   }, [searchParams, patients])
 
   const fetchPatients = async () => {
@@ -105,6 +116,56 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
         }
       }
     })
+  }
+
+  const prefillFromPatient = (selectedPatient: Patient, feedbackMessage: string) => {
+    reset()
+    setPatient(selectedPatient)
+    setPatientMatches([])
+    setCardNumber(selectedPatient.cardNumber)
+
+    setValue('cardNumber', selectedPatient.cardNumber)
+    setValue('name', selectedPatient.name)
+    setValue('birthDate', selectedPatient.birthDate || '')
+    setValue('sex', selectedPatient.sex || '')
+    setValue('policyNo', selectedPatient.policyNo || '')
+
+    if (selectedPatient.claims && selectedPatient.claims.length > 0) {
+      const latestClaim = [...selectedPatient.claims].sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return bTime - aTime
+      })[0]
+
+      applyClaimToForm(latestClaim)
+    }
+
+    setSearchFeedback(feedbackMessage)
+  }
+
+  const choosePatientMatch = (selectedPatient: Patient) => {
+    prefillFromPatient(selectedPatient, `Loaded ${selectedPatient.name}. Form prefilled from the selected patient record.`)
+  }
+
+  const loadPatientById = async (patientId: string) => {
+    try {
+      setLoading(true)
+
+      const matchedPatient = patients.find((entry) => entry.id === patientId)
+      const selectedPatient = matchedPatient || (await axios.get(`/api/patients/${patientId}`)).data
+
+      if (!selectedPatient) {
+        setSearchFeedback('Unable to load selected patient.')
+        return
+      }
+
+      prefillFromPatient(selectedPatient, `Loaded patient ${selectedPatient.name}. Form prefilled from latest claim if available.`)
+    } catch (error) {
+      console.error('Failed to load patient by id:', error)
+      setSearchFeedback('Unable to load selected patient.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const loadClaimById = async (claimId: string) => {
@@ -166,6 +227,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
     }
 
     setSearchFeedback('')
+    setPatientMatches([])
     setLoading(true)
     try {
       const exactCardMatch = patients.find(
@@ -178,30 +240,20 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
           p.name.toLowerCase().includes(query)
       )
 
-      const foundPatient = exactCardMatch || partialMatches[0]
-
-      if (foundPatient) {
-        setPatient(foundPatient)
-        setSearchFeedback(
-          partialMatches.length > 1
-            ? `Multiple matches found (${partialMatches.length}). Showing ${foundPatient.name}.`
-            : 'Patient found. Form prefilled from latest claim if available.'
+      if (exactCardMatch) {
+        prefillFromPatient(
+          exactCardMatch,
+          'Patient found. Form prefilled from latest claim if available.'
         )
-        setValue('cardNumber', foundPatient.cardNumber)
-        setValue('name', foundPatient.name)
-        if (foundPatient.birthDate) setValue('birthDate', foundPatient.birthDate)
-        if (foundPatient.sex) setValue('sex', foundPatient.sex)
-        if (foundPatient.policyNo) setValue('policyNo', foundPatient.policyNo)
-
-        if (foundPatient.claims && foundPatient.claims.length > 0) {
-          const latestClaim = [...foundPatient.claims].sort((a, b) => {
-            const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
-            const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
-            return bTime - aTime
-          })[0]
-
-          applyClaimToForm(latestClaim)
-        }
+      } else if (partialMatches.length === 1) {
+        prefillFromPatient(
+          partialMatches[0],
+          'Patient found. Form prefilled from latest claim if available.'
+        )
+      } else if (partialMatches.length > 1) {
+        setPatient(null)
+        setPatientMatches(partialMatches)
+        setSearchFeedback(`Multiple matches found (${partialMatches.length}). Select the correct patient record to prefill the form.`)
       } else {
         setPatient(null)
         setSearchFeedback('No existing patient found. Fill the form to create a new patient and claim.')
@@ -266,11 +318,10 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
   }
 
   const deleteClaim = async (claimId: string) => {
-    if (!confirm('Are you sure you want to delete this claim?')) return
-    
     setLoading(true)
     try {
       await axios.delete(`/api/claims/${claimId}`)
+      setPendingClaimDeletion(null)
       setSearchFeedback('Claim deleted successfully.')
       reset()
       setCardNumber('')
@@ -284,78 +335,117 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
     }
   }
 
-  const deletePatient = async (patientId: string) => {
-    if (!confirm('Are you sure you want to delete this patient and all their claims?')) return
-    
-    setLoading(true)
-    try {
-      await axios.delete(`/api/patients/${patientId}`)
-      setSearchFeedback('Patient deleted successfully.')
-      reset()
-      setCardNumber('')
-      setPatient(null)
-      fetchPatients()
-    } catch (error) {
-      console.error('Failed to delete patient:', error)
-      setSubmitError('Error deleting patient. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6 rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50 via-white to-amber-50 px-6 py-5 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900 [font-family:var(--font-display),sans-serif]">
-            Almadallah Claims Workspace
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Submit new healthcare claims, prefill from prior records, and download claim PDFs in one flow.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <ConfirmDialog
+        open={Boolean(pendingClaimDeletion)}
+        title="Delete claim?"
+        description="Are you sure you want to delete this claim? This action cannot be undone."
+        busy={loading}
+        onCancel={() => setPendingClaimDeletion(null)}
+        onConfirm={() => {
+          if (!pendingClaimDeletion) return
+          deleteClaim(pendingClaimDeletion)
+        }}
+      />
 
-        {/* Navigation */}
-        <div className="mb-6 flex justify-end gap-3">
-          <Link
-            href="/"
-            className="px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-800 font-medium text-sm"
-          >
-            Back to Registry →
-          </Link>
-        </div>
+      <section className="hero-panel px-6 py-7 md:px-8 md:py-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl space-y-3">
+            <div className="eyebrow">Claim workflow</div>
+            <h1 className="section-title text-slate-950">Create a new claim or prefill from prior patient history.</h1>
+            <p className="text-sm leading-6 text-slate-600 md:text-base">
+              Search for a patient first to preload demographics, then complete the claim form that mirrors the final printable document.
+            </p>
+          </div>
 
-        {/* Search Section */}
-        {!success && (
-          <div className="mb-6 p-6 bg-blue-50 border-2 border-blue-300 rounded">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900">Search Patient</h2>
-            <div className="flex gap-2">
+          <div className="flex flex-wrap gap-3">
+            <Link href="/" className="button-secondary">
+              Back to Dashboard
+            </Link>
+            {lastSavedClaimId && (
+              <a
+                href={`/print/${lastSavedClaimId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="button-primary"
+              >
+                Open Latest PDF
+              </a>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {!success && (
+        <section className="surface-card p-6 md:p-7">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="eyebrow">Patient lookup</div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Find a patient before starting the form</h2>
+              <p className="mt-2 text-sm text-slate-600">Use a patient name or card number to prefill the form with existing member information and latest history.</p>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 md:flex-row">
+            <div className="field-shell flex-1">
+              <label className="field-label" htmlFor="claim-patient-search">Patient name or card number</label>
               <input
+                id="claim-patient-search"
                 type="text"
                 placeholder="Enter patient name or card number"
                 value={cardNumber}
                 onChange={(e) => setCardNumber(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && searchPatient()}
-                className="flex-1 px-4 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="field-input"
               />
-              <button
-                type="button"
-                onClick={searchPatient}
-                disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 font-medium"
-              >
-                {loading ? 'Searching...' : 'Search'}
-              </button>
             </div>
+
+            <button
+              type="button"
+              onClick={searchPatient}
+              disabled={loading}
+              className="button-primary md:self-end"
+            >
+              {loading ? 'Searching...' : 'Search Patient'}
+            </button>
+          </div>
+
+          {patientMatches.length > 1 && (
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="text-sm font-semibold text-slate-900">Select a patient record</div>
+              <div className="mt-3 space-y-3">
+                {patientMatches.map((match) => (
+                  <button
+                    key={match.id}
+                    type="button"
+                    onClick={() => choosePatientMatch(match)}
+                    className="flex w-full flex-col gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-teal-300 hover:bg-teal-50"
+                  >
+                    <div className="font-semibold text-slate-950">{match.name}</div>
+                    <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+                      <span className="rounded-full bg-slate-100 px-2 py-1">Card {match.cardNumber}</span>
+                      <span className="rounded-full bg-slate-100 px-2 py-1">Policy {match.policyNo || 'N/A'}</span>
+                      <span className="rounded-full bg-slate-100 px-2 py-1">Birth {match.birthDate || 'N/A'}</span>
+                      <span className="rounded-full bg-slate-100 px-2 py-1">Claims {match.claims?.length || 0}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
             {patient && (
-              <div className="mt-4 p-3 bg-white border border-blue-300 rounded text-sm">
-                <strong>Patient:</strong> {patient.name} | <strong>Card:</strong> {patient.cardNumber} | <strong>Claims:</strong> {patient.claims?.length || 0}
+              <div className="notice-neutral mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="text-sm">
+                  <strong>Patient:</strong> {patient.name} | <strong>Card:</strong> {patient.cardNumber} | <strong>Claims:</strong> {patient.claims?.length || 0}
+                </div>
                 {getLatestClaimId(patient.claims) && (
                   <a
                     href={`/print/${getLatestClaimId(patient.claims)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ml-4 inline-block px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-semibold"
+                    className="button-secondary min-h-[38px] px-3 text-xs"
                   >
                     Download Latest Claim PDF
                   </a>
@@ -364,58 +454,60 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
             )}
 
             {searchFeedback && (
-              <p className="mt-3 text-sm text-slate-700">{searchFeedback}</p>
+              <div className="notice-neutral mt-4">{searchFeedback}</div>
             )}
-          </div>
-        )}
+        </section>
+      )}
 
-        {success && (
-          <div className="mb-6 p-4 bg-green-100 border-2 border-green-400 text-green-700 rounded text-center font-semibold">
-            ✅ Claim submitted successfully!
-            {lastSavedClaimId && (
-              <div className="mt-3">
-                <a
-                  href={`/print/${lastSavedClaimId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
-                >
-                  Download Submitted Claim PDF
-                </a>
-              </div>
-            )}
-          </div>
-        )}
+      {success && (
+        <div className="notice-success text-center font-semibold">
+          Claim submitted successfully.
+          {lastSavedClaimId && (
+            <div className="mt-4 flex justify-center">
+              <a
+                href={`/print/${lastSavedClaimId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="button-primary"
+              >
+                Download Submitted Claim PDF
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
-        {submitError && (
-          <div className="mb-6 p-4 bg-red-100 border-2 border-red-300 text-red-700 rounded text-center font-semibold">
-            {submitError}
-          </div>
-        )}
+      {submitError && <div className="notice-danger text-center font-semibold">{submitError}</div>}
 
-        {/* PDF-Style Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="claim-paper p-8 bg-white">
-          {/* Header */}
-          <div className="grid grid-cols-3 gap-4 mb-6 pb-4 border-b-4 border-amber-900">
-            {/* Left: Logo/Company */}
-            <div>
-              <div className="font-bold text-amber-900 text-xl">ALMADALLAH</div>
-              <div className="text-xs text-amber-700 font-semibold">HEALTHCARE MANAGEMENT</div>
-            </div>
-            {/* Center: Title */}
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">Claim Form</div>
-            </div>
-            {/* Right: Form Number */}
-            <div className="text-right">
-              <div className="text-xs text-gray-600 mb-1">No.</div>
-              <input
-                type="text"
-                placeholder="GYFOFO"
-                className="border-b border-gray-400 px-2 py-1 w-24 text-sm font-semibold text-right"
-              />
-            </div>
+      {/* PDF-Style Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="claim-paper bg-white p-6 md:p-8 lg:p-10">
+        {/* Header */}
+        <div className="grid grid-cols-3 gap-4 mb-6 pb-4 border-b-4 border-amber-900">
+          {/* Left: Logo/Company */}
+          <div className="flex items-center">
+            <Image
+              src="/logo_original.svg"
+              alt="Almadallah Healthcare Management"
+              width={280}
+              height={74}
+              className="h-auto w-full max-w-[280px]"
+              priority
+            />
           </div>
+          {/* Center: Title */}
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900">Claim Form</div>
+          </div>
+          {/* Right: Form Number */}
+          <div className="text-right">
+            <div className="text-xs text-gray-600 mb-1">No.</div>
+            <input
+              type="text"
+              placeholder="GYFOFO"
+              className="border-b border-gray-400 px-2 py-1 w-24 text-sm font-semibold text-right"
+            />
+          </div>
+        </div>
 
           {/* Date and Provider Top Row - Table Style */}
           <div className="grid grid-cols-2 gap-0 mb-6 border border-gray-400">
@@ -799,6 +891,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
               <label className="block text-xs font-semibold text-gray-900 mb-1">Date</label>
               <input
                 type="date"
+                aria-label="Physician signature date"
                 className="border-b border-gray-400 px-2 py-1 w-full text-sm"
               />
             </div>
@@ -810,6 +903,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
               <label className="block text-xs font-semibold text-gray-900 mb-1">Date</label>
               <input
                 type="date"
+                aria-label="Patient or guardian signature date"
                 className="border-b border-gray-400 px-2 py-1 w-full text-sm"
               />
             </div>
@@ -820,9 +914,9 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 font-semibold text-sm"
+              className="button-primary"
             >
-              {loading ? 'Submitting...' : 'SUBMIT CLAIM'}
+              {loading ? 'Submitting...' : 'Save Claim'}
             </button>
             <button
               type="button"
@@ -831,33 +925,22 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
                 setCardNumber('')
                 setPatient(null)
               }}
-              className="px-8 py-3 bg-gray-400 text-gray-900 rounded hover:bg-gray-500 font-semibold text-sm"
+              className="button-secondary"
             >
-              CLEAR FORM
+              Clear Form
             </button>
             {patient && lastSavedClaimId && (
               <button
                 type="button"
-                onClick={() => deleteClaim(lastSavedClaimId)}
+                onClick={() => setPendingClaimDeletion(lastSavedClaimId)}
                 disabled={loading}
-                className="px-8 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 font-semibold text-sm"
+                className="button-danger"
               >
-                {loading ? 'Deleting...' : 'DELETE CLAIM'}
-              </button>
-            )}
-            {patient && (
-              <button
-                type="button"
-                onClick={() => deletePatient(patient.id)}
-                disabled={loading}
-                className="px-8 py-3 bg-red-800 text-white rounded hover:bg-red-900 disabled:bg-gray-400 font-semibold text-sm"
-              >
-                {loading ? 'Deleting...' : 'DELETE PATIENT'}
+                {loading ? 'Deleting...' : 'Delete Claim'}
               </button>
             )}
           </div>
-        </form>
-      </div>
+      </form>
     </div>
   )
 }
