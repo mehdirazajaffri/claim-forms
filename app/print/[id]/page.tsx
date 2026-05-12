@@ -117,7 +117,7 @@ export default function PrintClaimPage() {
                   <img src="/logo_original.svg" alt="ALMADALLAH" className="logo-image" />
                 </div>
                 <div className="title">Claim Form</div>
-                <div className="no">No.<span className="no-val">{claim.id.slice(-6).toUpperCase()}</span></div>
+                <div className="no">No.<span className="no-val"></span></div>
               </div>
 
               <table className="form" aria-label="Claim form print layout">
@@ -156,7 +156,7 @@ export default function PrintClaimPage() {
                   </div>
                 </td>
                 <td colSpan={9}>
-                  <div className="label">Symptom(s) as described by patient:</div>
+                  <div className="label">Symptom(s) as described by <br />patient:</div>
                   <div className="pre">{claim.symptoms || ''}</div>
                 </td>
               </tr>
@@ -175,7 +175,7 @@ export default function PrintClaimPage() {
                 <td colSpan={6} className="subsection">OBJECTIVE/ASSESSMENT</td>
                 <td colSpan={6} className="subsection right-note">To be completed by physician</td>
               </tr>
-              <tr className="row-xl"><td colSpan={12}><span className="label">Clinical Findings:</span><div className="pre">{claim.clinicalFindings || ''}</div></td></tr>
+              <tr className="row-xl"><td colSpan={12}><span className="label">Clinical <br />Findings:</span><div className="pre">{claim.clinicalFindings || ''}</div></td></tr>
               <tr className="row-md">
                 <td colSpan={12}>
                   <div className="row-checks">
@@ -292,7 +292,7 @@ export default function PrintClaimPage() {
         .logo-block{ display:flex; align-items:flex-start; margin-top:2px; }
         .logo-image{ height:52px; width:auto; object-fit:contain; }
         .title{ text-align:center; font-weight:700; font-size:22px; line-height:1.1; margin-top:6px; color:#2b2b2b; }
-        .no{ text-align:right; font-size:13px; font-weight:700; margin-top:8px; }
+        .no{ text-align:center; font-size:13px; font-weight:700; margin-top:8px; }
         .no-val{ display:block; font-size:10px; font-weight:700; letter-spacing:0.3px; margin-top:2px; }
         table.form{ width:100%; border-collapse:collapse; margin-top:1mm; font-size:12px; table-layout:fixed; border:1.5px solid #2b2b2b; }
         :global(col.col-fixed){ width:8.333%; }
