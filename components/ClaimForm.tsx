@@ -542,7 +542,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
           </div>
 
           {/* PATIENT INFORMATION */}
-          <div className="bg-amber-200 px-4 py-2 font-bold text-xs text-gray-900 mb-0 border border-gray-400">PATIENT INFORMATION</div>
+          <div className="bg-[#dcccb6] px-4 py-2 font-bold text-xs text-[#3d2f1e] mb-0 border border-gray-400">PATIENT INFORMATION</div>
           <div className="border-l border-r border-b border-gray-400 p-4">
             <div className="mb-4">
               <label className="block text-xs font-semibold text-gray-900 mb-2">Patient&apos;s Name (as on ID):</label>
@@ -593,9 +593,9 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
           </div>
 
           {/* INFORMATION */}
-          <div className="bg-amber-200 px-4 py-2 font-bold text-xs text-gray-900 mb-0 border-l border-r border-t border-gray-400 flex justify-between items-center">
+          <div className="bg-[#dcccb6] px-4 py-2 font-bold text-xs text-[#3d2f1e] mb-0 border-l border-r border-t border-gray-400 flex justify-between items-center">
             <span>INFORMATION</span>
-            <span className="text-xs font-normal italic">To be completed by physician</span>
+            <span className="text-xs font-normal italic text-gray-600">To be completed by physician</span>
           </div>
           <div className="border-l border-r border-b border-gray-400 p-0">
             {/* Service Date and Symptoms Row */}
@@ -609,12 +609,14 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
                   className="border-b border-gray-400 px-2 py-1 w-full text-sm"
                 />
               </div>
-              <div className="p-4">
-                <label className="block text-xs font-semibold text-gray-900 mb-2">Symptom(s) as described by patient:</label>
+              <div className="p-4 flex gap-2 items-start">
+                <span className="shrink-0 w-max max-w-[min(42%,12rem)] pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
+                  Symptom(s) as described by patient:
+                </span>
                 <textarea
                   {...register('symptoms')}
                   rows={2}
-                  className="border-b border-gray-400 px-2 py-1 w-full text-sm resize-none"
+                  className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
                 />
               </div>
             </div>
@@ -650,31 +652,33 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
                   <label htmlFor="family" className="text-xs text-gray-900 ml-2">Family History of any Illness</label>
                 </div>
               </div>
-              <div className="p-4">
-                <label className="block text-xs font-semibold text-gray-900 mb-2">If Yes</label>
-                <label className="block text-xs font-semibold text-gray-900 mb-2">Specify:</label>
+              <div className="p-4 flex gap-2 items-start">
+                <span className="shrink-0 w-max max-w-[min(40%,10rem)] pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
+                  If Yes Specify:
+                </span>
                 <textarea
                   {...register('additionalNotes')}
                   rows={3}
-                  className="border-b border-gray-400 px-2 py-1 w-full text-sm resize-none"
+                  className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
                 />
               </div>
             </div>
           </div>
 
           {/* OBJECTIVE/ASSESSMENT */}
-          <div className="bg-amber-200 px-4 py-2 font-bold text-xs text-gray-900 mb-0 border-l border-r border-t border-gray-400 flex justify-between items-center">
+          <div className="bg-[#dcccb6] px-4 py-2 font-bold text-xs text-[#3d2f1e] mb-0 border-l border-r border-t border-gray-400 flex justify-between items-center">
             <span>OBJECTIVE/ASSESSMENT</span>
-            <span className="text-xs font-normal italic">To be completed by physician</span>
+            <span className="text-xs font-normal italic text-gray-600">To be completed by physician</span>
           </div>
           <div className="border-l border-r border-b border-gray-400 p-4 space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-900 mb-2">Clinical</label>
-              <label className="block text-xs font-semibold text-gray-900 mb-2">Findings:</label>
+            <div className="flex gap-2 items-start">
+              <span className="shrink-0 w-max max-w-[min(40%,10rem)] pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
+                Clinical Findings:
+              </span>
               <textarea
                 {...register('clinicalFindings')}
                 rows={2}
-                className="border-b border-gray-400 px-2 py-1 w-full text-sm resize-none"
+                className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
               />
             </div>
 
@@ -698,12 +702,14 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
             </div>
 
             {/* Other(s) Explain */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-900 mb-2">Other(s), Explain</label>
+            <div className="flex gap-2 items-start">
+              <span className="shrink-0 w-max max-w-[min(40%,10rem)] pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
+                Other(s), Explain
+              </span>
               <textarea
                 {...register('otherCause')}
                 rows={2}
-                className="border-b border-gray-400 px-2 py-1 w-full text-sm resize-none"
+                className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
               />
             </div>
 
@@ -751,20 +757,22 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
             </div>
 
             {/* Comments */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-900 mb-2">Comments</label>
+            <div className="flex gap-2 items-start">
+              <span className="shrink-0 w-max pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
+                Comments
+              </span>
               <textarea
                 {...register('comments')}
                 rows={2}
-                className="border-b border-gray-400 px-2 py-1 w-full text-sm resize-none"
+                className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
               />
             </div>
           </div>
 
           {/* MEDICAL PLAN */}
-          <div className="bg-amber-200 px-4 py-2 font-bold text-xs text-gray-900 mb-0 border-l border-r border-t border-gray-400">
+          <div className="bg-[#dcccb6] px-4 py-2 font-bold text-xs text-[#3d2f1e] mb-0 border-l border-r border-t border-gray-400">
             <div>MEDICAL PLAN</div>
-            <div className="text-xs font-normal italic">Itemized original invoices & Applicable Prescriptions/Reports/Results Must be enclosed to consider the claim</div>
+            <div className="text-xs font-normal italic text-gray-600">Itemized original invoices & Applicable Prescriptions/Reports/Results Must be enclosed to consider the claim</div>
           </div>
           <div className="border-l border-r border-b border-gray-400 p-4 space-y-4">
             {/* Medical Plan Checkboxes */}
@@ -800,49 +808,55 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
 
             {/* Pre-Authorization and Almadallah Use Only Section */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-900 mb-2">Pre Authorization Required for:</label>
+              <div className="flex gap-2 items-start">
+                <span className="shrink-0 w-max max-w-[min(44%,13rem)] pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
+                  Pre Authorization Required for:
+                </span>
                 <textarea
                   {...register('preAuthorizationDetails')}
                   rows={3}
-                  className="border-b border-gray-400 px-2 py-1 w-full text-sm resize-none"
+                  className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
                 />
               </div>
-              <div className="bg-amber-100 border border-gray-400 p-3">
-                <div className="text-xs font-semibold text-gray-900 mb-3">For Almadallah&apos;s Use Only</div>
+              <div className="bg-[#eedfce] border border-gray-400 p-3">
+                <div className="text-xs font-bold text-[#3d2f1e] mb-3">For Almadallah&apos;s Use Only</div>
                 <div className="text-xs text-gray-700 mb-3">As per agreed tariff</div>
-                <label className="block text-xs font-semibold text-gray-900 mb-2">ApprovalCode:</label>
-                <input
-                  type="text"
-                  {...register('approvalCode')}
-                  className="border-b border-gray-400 px-2 py-1 w-full text-sm"
-                />
+                <div className="flex gap-2 items-center">
+                  <span className="shrink-0 w-max pr-1 text-xs font-normal text-gray-900">ApprovalCode:</span>
+                  <input
+                    type="text"
+                    {...register('approvalCode')}
+                    className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Full Details of Treatment */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-900 mb-2">Full details of proposed treatment/ Surgery/ Medicine:</label>
+            <div className="flex gap-2 items-start">
+              <span className="shrink-0 w-max max-w-[min(44%,13rem)] pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
+                Full details of proposed treatment/ Surgery/ Medicine:
+              </span>
               <textarea
                 {...register('proposedTreatment')}
                 rows={3}
-                className="border-b border-gray-400 px-2 py-1 w-full text-sm resize-none"
+                className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
               />
             </div>
 
             {/* Estimated Cost */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-900 mb-2">EstimatedCost</label>
+            <div className="flex gap-2 items-center">
+              <span className="shrink-0 w-max pr-1 text-xs font-normal text-gray-900">EstimatedCost</span>
               <input
                 type="text"
                 {...register('estimatedCost')}
-                className="border-b border-gray-400 px-2 py-1 w-full text-sm"
+                className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm"
               />
             </div>
           </div>
 
           {/* IN-PATIENT */}
-          <div className="bg-amber-200 px-4 py-2 font-bold text-xs text-gray-900 mb-0 border-l border-r border-t border-gray-400">
+          <div className="bg-[#dcccb6] px-4 py-2 font-bold text-xs text-[#3d2f1e] mb-0 border-l border-r border-t border-gray-400">
             <div>IN-PATIENT</div>
             <div className="text-xs font-normal italic">Discharge summary. Itemized Invoices, Report, Results should be attached</div>
           </div>
@@ -876,7 +890,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
           </div>
 
           {/* Declaration */}
-          <div className="bg-amber-100 border border-gray-400 p-3 mb-6 text-xs text-gray-900 italic leading-relaxed">
+          <div className="bg-[#dcccb6] border border-gray-400 p-3 mb-6 text-xs text-[#3d2f1e] italic leading-relaxed">
             The above information is true to the best of my knowledge. I hereby authorize any Healthcare Provider, Insurer, Employer or other Organization to release any information regarding my medical conditions &amp; history to ALMADALLAH for the purpose of determining insurance benefits
           </div>
 

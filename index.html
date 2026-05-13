@@ -38,6 +38,10 @@
     .subsection .right-note{ text-align:right; font-weight:500; font-style:italic; color:var(--muted); }
 
     .label{ font-weight:600; }
+    .field-row{ display:flex; gap:6px; align-items:flex-start; }
+    .field-row > .label{ flex:0 0 auto; width:max-content; max-width:min(38%, 12rem); min-width:0; padding-right:4px; line-height:1.25; }
+    .field-row > textarea,
+    .field-row > .line{ flex:1; min-width:0; }
     .muted{ color:var(--muted); }
     .italic{ font-style:italic; }
 
@@ -139,8 +143,11 @@
 
         <tr>
           <td colspan="3"><span class="label">Service<br/>Date</span><div class="line"><input type="date" title="Service date" aria-label="Service date" /></div></td>
-          <td colspan="9"><span class="label">Symptom(s) as described by<br/>patient:</span>
-            <textarea class="h-60" aria-label="Symptoms"></textarea>
+          <td colspan="9">
+            <div class="field-row">
+              <span class="label">Symptom(s) as described by patient:</span>
+              <textarea class="h-60" aria-label="Symptoms"></textarea>
+            </div>
           </td>
         </tr>
 
@@ -152,8 +159,11 @@
               <label><input type="checkbox" /> Family History of any Illness</label>
             </div>
           </td>
-          <td colspan="6"><span class="label">If Yes<br/>Specify:</span>
-            <textarea class="h-60" aria-label="If yes specify"></textarea>
+          <td colspan="6">
+            <div class="field-row">
+              <span class="label">If Yes Specify:</span>
+              <textarea class="h-60" aria-label="If yes specify"></textarea>
+            </div>
           </td>
         </tr>
 
@@ -164,8 +174,11 @@
         </tr>
 
         <tr>
-          <td colspan="12"><span class="label">Clinical<br/>Findings:</span>
-            <textarea class="h-80" aria-label="Clinical findings"></textarea>
+          <td colspan="12">
+            <div class="field-row">
+              <span class="label">Clinical Findings:</span>
+              <textarea class="h-80" aria-label="Clinical findings"></textarea>
+            </div>
           </td>
         </tr>
 
@@ -185,8 +198,11 @@
         </tr>
 
         <tr>
-          <td colspan="12"><span class="label">Other(s), Explain</span>
-            <div class="line"><input type="text" aria-label="Other explain" /></div>
+          <td colspan="12">
+            <div class="field-row">
+              <span class="label">Other(s), Explain</span>
+              <div class="line"><input type="text" aria-label="Other explain" /></div>
+            </div>
           </td>
         </tr>
 
@@ -203,8 +219,11 @@
         </tr>
 
         <tr>
-          <td colspan="12"><span class="label">Comments</span>
-            <textarea class="h-60" aria-label="Comments"></textarea>
+          <td colspan="12">
+            <div class="field-row">
+              <span class="label">Comments</span>
+              <textarea class="h-60" aria-label="Comments"></textarea>
+            </div>
           </td>
         </tr>
 
@@ -232,14 +251,18 @@
         <!-- Pre-Authorization + Use Only -->
         <tr>
           <td colspan="8" rowspan="3">
-            <span class="label">Pre Authorization<br/>Required for:</span>
-            <textarea class="h-42" aria-label="Pre authorization required for"></textarea>
-            <div class="spacer-6"></div>
-            <span class="label">Full details of proposed treatment/ Surgery/ Medicine:</span>
-            <textarea class="h-110" aria-label="Full details"></textarea>
-            <div class="spacer-6"></div>
-            <span class="label">EstimatedCost</span>
-            <div class="line"><input type="text" aria-label="Estimated cost" /></div>
+            <div class="field-row" style="margin-bottom:8px;">
+              <span class="label">Pre Authorization Required for:</span>
+              <textarea class="h-42" aria-label="Pre authorization required for"></textarea>
+            </div>
+            <div class="field-row" style="margin-bottom:8px;">
+              <span class="label">Full details of proposed treatment/ Surgery/ Medicine:</span>
+              <textarea class="h-110" aria-label="Full details"></textarea>
+            </div>
+            <div class="field-row">
+              <span class="label">EstimatedCost</span>
+              <div class="line"><input type="text" aria-label="Estimated cost" /></div>
+            </div>
           </td>
           <td colspan="4" class="use-only-h">For Almadaallah's Use Only</td>
         </tr>

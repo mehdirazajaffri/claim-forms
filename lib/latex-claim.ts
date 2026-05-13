@@ -144,25 +144,29 @@ export function buildClaimLatex(formData: any): string {
 \rowcolor{beigehead}
 \multicolumn{2}{|l|}{\textbf{INFORMATION}} & \multicolumn{2}{l|}{\textit{To be completed by physician}} \\
 \hline
-\rule{0pt}{1.0cm}Service\\Date ${v.serviceDate} & \multicolumn{3}{p{0.70\textwidth}|}{Symptom(s) as described by\\patient: ${v.symptoms}} \\
+\rule{0pt}{1.0cm}Service\\Date ${v.serviceDate} & \multicolumn{3}{|p{0.70\textwidth}|}{\begin{minipage}[t]{\linewidth}\vspace{0pt}\begin{minipage}[t]{0.27\linewidth}\raggedright Symptom(s) as described by patient:\end{minipage}\begin{minipage}[t]{0.71\linewidth}\raggedright ${v.symptoms}\end{minipage}\end{minipage}} \\
 \hline
-\multicolumn{2}{|p{0.46\textwidth}|}{\rule{0pt}{1.5cm}${v.preExisting} \cb\ Pre-existing Condition(s) being treated\\${v.chronicMeds} \cb\ Chronic Medications\\${v.familyHistory} \cb\ Family History of any Illness} & \multicolumn{2}{p{0.46\textwidth}|}{If Yes\\Specify: ${v.additionalNotes}} \\
+\multicolumn{2}{|p{0.46\textwidth}|}{\rule{0pt}{1.5cm}${v.preExisting} \cb\ Pre-existing Condition(s) being treated\\${v.chronicMeds} \cb\ Chronic Medications\\${v.familyHistory} \cb\ Family History of any Illness} & \multicolumn{2}{|p{0.46\textwidth}|}{\begin{minipage}[t]{\linewidth}\vspace{0pt}\begin{minipage}[t]{0.22\linewidth}\raggedright If Yes Specify:\end{minipage}\begin{minipage}[t]{0.76\linewidth}\raggedright ${v.additionalNotes}\end{minipage}\end{minipage}} \\
 \hline
 \rowcolor{beigehead}
 \multicolumn{2}{|l|}{\textbf{OBJECTIVE/ASSESSMENT}} & \multicolumn{2}{l|}{\textit{To be completed by physician}} \\
 \hline
-\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{1.0cm}Clinical\\Findings: ${v.clinicalFindings}} \\
+\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{1.0cm}\begin{minipage}[t]{\linewidth}\vspace{0pt}\begin{minipage}[t]{0.20\linewidth}\raggedright Clinical Findings:\end{minipage}\begin{minipage}[t]{0.78\linewidth}\raggedright ${v.clinicalFindings}\end{minipage}\end{minipage}} \\
 \hline
-\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{0.9cm}Cause \hspace{0.5cm}${v.accident} \cb\ Accident \hspace{0.3cm}${v.dental} \cb\ Dental \hspace{0.3cm}${v.maternity} \cb\ Maternity \hspace{0.3cm}${v.physicalIllness} \cb\ Physical Illness \hspace{0.3cm}${v.preventive} \cb\ Preventive \hspace{0.3cm}${v.psychiatry} \cb\ Psychiatry \hspace{0.3cm}${v.workRelated} \cb\ Work Related\\[0.15cm]Other(s), Explain ${v.otherCause}} \\
+\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{0.9cm}Cause \hspace{0.5cm}${v.accident} \cb\ Accident \hspace{0.3cm}${v.dental} \cb\ Dental \hspace{0.3cm}${v.maternity} \cb\ Maternity \hspace{0.3cm}${v.physicalIllness} \cb\ Physical Illness \hspace{0.3cm}${v.preventive} \cb\ Preventive \hspace{0.3cm}${v.psychiatry} \cb\ Psychiatry \hspace{0.3cm}${v.workRelated} \cb\ Work Related} \\
 \hline
-\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{1.0cm}\textbf{Assessment /Diagnosis} \hspace{0.7cm}${v.assessmentAcute} \cb\ Acute \hspace{0.3cm}${v.assessmentChronic} \cb\ Chronic \hspace{0.3cm}${v.assessmentConfirmed} \cb\ Confirmed \hspace{0.3cm}${v.assessmentSuspected} \cb\ Suspected\\[0.2cm]Comments ${v.comments}} \\
+\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{0.85cm}\begin{minipage}[t]{\linewidth}\vspace{0pt}\begin{minipage}[t]{0.20\linewidth}\raggedright Other(s), Explain\end{minipage}\begin{minipage}[t]{0.78\linewidth}\raggedright ${v.otherCause}\end{minipage}\end{minipage}} \\
+\hline
+\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{0.85cm}\textbf{Assessment /Diagnosis} \hspace{0.7cm}${v.assessmentAcute} \cb\ Acute \hspace{0.3cm}${v.assessmentChronic} \cb\ Chronic \hspace{0.3cm}${v.assessmentConfirmed} \cb\ Confirmed \hspace{0.3cm}${v.assessmentSuspected} \cb\ Suspected} \\
+\hline
+\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{0.85cm}\begin{minipage}[t]{\linewidth}\vspace{0pt}\begin{minipage}[t]{0.14\linewidth}\raggedright Comments\end{minipage}\begin{minipage}[t]{0.84\linewidth}\raggedright ${v.comments}\end{minipage}\end{minipage}} \\
 \hline
 \rowcolor{beigehead}
 \multicolumn{4}{|l|}{\textbf{MEDICAL PLAN}\\[-0.1cm]{\scriptsize Itemized original Invoices \& Applicable Prescriptions/Reports/Results Must be enclosed to consider the claim}} \\
 \hline
 \multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{\rule{0pt}{0.75cm}${v.consultation} \cb\ Consultation \hspace{0.35cm}${v.physiotherapy} \cb\ Physiotherapy \hspace{0.35cm}${v.laboratory} \cb\ Laboratory \hspace{0.35cm}${v.radiology} \cb\ Radiology \hspace{0.35cm}${v.pharmacy} \cb\ Pharmacy \hspace{0.35cm}${v.otherPlan} \cb\ Other ${v.otherMedical}} \\
 \hline
-\multicolumn{2}{|p{0.46\textwidth}|}{\rule{0pt}{3.1cm}Pre Authorization\\Required for: ${v.preAuthorizationDetails}\\[0.5cm]Full details of proposed treatment/ Surgery/ Medicine: ${v.proposedTreatment}\\[1.2cm]EstimatedCost ${v.estimatedCost}} & \multicolumn{2}{p{0.46\textwidth}|}{\cellcolor{beigehead}\textbf{For Almadallah's Use Only}\\As per agreed tariff ${v.approvedTariff}\\ApprovalCode: ${v.approvalCode}\\[2.0cm]} \\
+\multicolumn{2}{|p{0.46\textwidth}|}{\rule{0pt}{3.1cm}\begin{minipage}[t]{\linewidth}\vspace{0pt}\begin{minipage}[t]{0.34\linewidth}\raggedright Pre Authorization Required for:\end{minipage}\begin{minipage}[t]{0.64\linewidth}\raggedright ${v.preAuthorizationDetails}\end{minipage}\\[0.45cm]\begin{minipage}[t]{0.34\linewidth}\raggedright Full details of proposed treatment/ Surgery/ Medicine:\end{minipage}\begin{minipage}[t]{0.64\linewidth}\raggedright ${v.proposedTreatment}\end{minipage}\\[0.45cm]\begin{minipage}[t]{0.26\linewidth}\raggedright EstimatedCost\end{minipage}\begin{minipage}[t]{0.72\linewidth}\raggedright ${v.estimatedCost}\end{minipage}\end{minipage}} & \multicolumn{2}{|p{0.46\textwidth}|}{\cellcolor{beigehead}\textbf{For Almadallah's Use Only}\\As per agreed tariff ${v.approvedTariff}\\ApprovalCode: ${v.approvalCode}\\[2.0cm]} \\
 \hline
 \rowcolor{beigehead}
 \multicolumn{4}{|l|}{\textbf{IN-PATIENT}\\[-0.1cm]{\scriptsize Discharge summary, Itemized Invoices, Report, Results should be attached}} \\
