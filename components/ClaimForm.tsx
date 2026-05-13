@@ -75,6 +75,9 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [lastSavedClaimId, setLastSavedClaimId] = useState<string | null>(null)
+  const [editingClaimId, setEditingClaimId] = useState<string | null>(null)
+  const [updateLoading, setUpdateLoading] = useState(false)
+  const [updateSuccess, setUpdateSuccess] = useState(false)
   const [searchFeedback, setSearchFeedback] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [pendingClaimDeletion, setPendingClaimDeletion] = useState<string | null>(null)
@@ -134,6 +137,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
     setPatient(selectedPatient)
     setPatientMatches([])
     setCardNumber(selectedPatient.cardNumber)
+    setEditingClaimId(null)
 
     setValue('cardNumber', selectedPatient.cardNumber)
     setValue('name', selectedPatient.name)
@@ -221,7 +225,9 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
       if (selectedPatient.policyNo) setValue('policyNo', selectedPatient.policyNo)
 
       applyClaimToForm(claim)
-      setSearchFeedback(`Loaded claim for ${selectedPatient.name}.`)
+      setEditingClaimId(claim.id)
+      setLastSavedClaimId(claim.id)
+      setSearchFeedback(`Editing claim for ${selectedPatient.name}.`)
     } catch (error) {
       console.error('Failed to load claim by id:', error)
       setSearchFeedback('Unable to load selected claim.')
@@ -312,6 +318,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
       })
 
       setLastSavedClaimId(claimResponse.data.id)
+      setEditingClaimId(null)
 
       setSuccess(true)
         if (onSuccess) onSuccess()
@@ -326,6 +333,29 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
       setSubmitError('Error submitting claim. Please review required details and retry.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const onUpdate = async (data: FormData) => {
+    if (!editingClaimId) return
+    setUpdateLoading(true)
+    setSubmitError('')
+    try {
+      const claimResponse = await axios.put(`/api/claims/${editingClaimId}`, {
+        ...data,
+        physicianSignature: physicianSignatureImage,
+      })
+
+      setLastSavedClaimId(claimResponse.data.id)
+      setUpdateSuccess(true)
+      setTimeout(() => setUpdateSuccess(false), 3000)
+      setSearchFeedback('Claim updated successfully.')
+      fetchPatients()
+    } catch (error) {
+      console.error('Failed to update claim:', error)
+      setSubmitError('Error updating claim. Please review required details and retry.')
+    } finally {
+      setUpdateLoading(false)
     }
   }
 
@@ -375,16 +405,6 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
             <Link href="/" className="button-secondary">
               Back to Dashboard
             </Link>
-            {lastSavedClaimId && (
-              <a
-                href={`/print/${lastSavedClaimId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="button-primary"
-              >
-                Open Latest PDF
-              </a>
-            )}
           </div>
         </div>
       </section>
@@ -966,10 +986,20 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
 
           {/* Submit Buttons */}
           <div className="flex gap-4 pt-6 border-t border-gray-400 flex-wrap">
+            {editingClaimId && (
+              <button
+                type="button"
+                onClick={handleSubmit(onUpdate)}
+                disabled={updateLoading || loading}
+                className="button-primary"
+              >
+                {updateLoading ? 'Updating...' : updateSuccess ? 'Updated' : 'Update Claim'}
+              </button>
+            )}
             <button
               type="submit"
-              disabled={loading}
-              className="button-primary"
+              disabled={loading || updateLoading}
+              className={editingClaimId ? 'button-secondary' : 'button-primary'}
             >
               {loading ? 'Submitting...' : 'Save Claim'}
             </button>
@@ -979,6 +1009,9 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
                 reset()
                 setCardNumber('')
                 setPatient(null)
+                setEditingClaimId(null)
+                setLastSavedClaimId(null)
+                setSearchFeedback('')
               }}
               className="button-secondary"
             >
@@ -988,7 +1021,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
               <button
                 type="button"
                 onClick={() => setPendingClaimDeletion(lastSavedClaimId)}
-                disabled={loading}
+                disabled={loading || updateLoading}
                 className="button-danger"
               >
                 {loading ? 'Deleting...' : 'Delete Claim'}

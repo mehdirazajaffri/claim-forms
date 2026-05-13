@@ -21,6 +21,7 @@ interface Patient {
   birthDate?: string
   sex?: string
   policyNo?: string
+  assessmentFileLink?: string
   createdAt: string
   claims: Claim[]
 }
@@ -37,6 +38,33 @@ interface PendingClaimDeletion {
   patientName: string
 }
 
+interface PatientFormState {
+  cardNumber: string
+  name: string
+  birthDate: string
+  sex: string
+  policyNo: string
+  assessmentFileLink: string
+}
+
+const emptyForm: PatientFormState = {
+  cardNumber: '',
+  name: '',
+  birthDate: '',
+  sex: '',
+  policyNo: '',
+  assessmentFileLink: '',
+}
+
+const toFormState = (patient: Patient): PatientFormState => ({
+  cardNumber: patient.cardNumber || '',
+  name: patient.name || '',
+  birthDate: patient.birthDate || '',
+  sex: patient.sex || '',
+  policyNo: patient.policyNo || '',
+  assessmentFileLink: patient.assessmentFileLink || '',
+})
+
 export default function PatientsList() {
   const router = useRouter()
   const [patients, setPatients] = useState<Patient[]>([])
@@ -47,13 +75,10 @@ export default function PatientsList() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [status, setStatus] = useState<StatusState | null>(null)
   const [pendingClaimDeletion, setPendingClaimDeletion] = useState<PendingClaimDeletion | null>(null)
-  const [formData, setFormData] = useState({
-    cardNumber: '',
-    name: '',
-    birthDate: '',
-    sex: '',
-    policyNo: '',
-  })
+  const [editingPatientId, setEditingPatientId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<PatientFormState>(emptyForm)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [formData, setFormData] = useState<PatientFormState>(emptyForm)
 
   useEffect(() => {
     fetchPatients()
@@ -102,6 +127,47 @@ export default function PatientsList() {
     }
   }
 
+  const startEditPatient = (patient: Patient) => {
+    setEditingPatientId(patient.id)
+    setEditForm(toFormState(patient))
+    setExpandedPatient(patient.id)
+    setStatus(null)
+  }
+
+  const cancelEditPatient = () => {
+    setEditingPatientId(null)
+    setEditForm(emptyForm)
+  }
+
+  const saveEditPatient = async (patientId: string) => {
+    if (!editForm.cardNumber.trim() || !editForm.name.trim()) {
+      setStatus({ tone: 'danger', text: 'Emirates ID and patient name are required.' })
+      return
+    }
+
+    try {
+      setSavingEdit(true)
+      await axios.put(`/api/patients/${patientId}`, {
+        cardNumber: editForm.cardNumber.trim(),
+        name: editForm.name.trim(),
+        birthDate: editForm.birthDate || null,
+        sex: editForm.sex || null,
+        policyNo: editForm.policyNo.trim() || null,
+        assessmentFileLink: editForm.assessmentFileLink.trim() || null,
+      })
+      setEditingPatientId(null)
+      setEditForm(emptyForm)
+      setStatus({ tone: 'success', text: 'Patient updated successfully.' })
+      fetchPatients()
+    } catch (error: any) {
+      console.error('Failed to update patient:', error)
+      const errorMsg = error.response?.data?.error || 'Failed to update patient.'
+      setStatus({ tone: 'danger', text: errorMsg })
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
   const deletePatient = async (patientId: string, patientName: string) => {
     if (!confirm(`Delete patient "${patientName}" and all their claims? This action cannot be undone.`)) return
 
@@ -137,7 +203,7 @@ export default function PatientsList() {
         policyNo: formData.policyNo.trim() || null,
       })
 
-      setFormData({ cardNumber: '', name: '', birthDate: '', sex: '', policyNo: '' })
+      setFormData(emptyForm)
       setShowAddForm(false)
       setStatus({ tone: 'success', text: 'Patient created successfully and added to the patient list.' })
       fetchPatients()
@@ -282,7 +348,7 @@ export default function PatientsList() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData({ cardNumber: '', name: '', birthDate: '', sex: '', policyNo: '' })}
+                    onClick={() => setFormData(emptyForm)}
                     className="button-secondary"
                   >
                     Clear
@@ -367,33 +433,140 @@ export default function PatientsList() {
                       <div className="grid gap-6 2xl:grid-cols-[320px_minmax(0,1fr)]">
                         <div className="space-y-4">
                           <div className="surface-card p-5">
-                            <div className="eyebrow">Patient detail</div>
-                            <div className="mt-4 grid gap-4 xl:grid-cols-2 2xl:grid-cols-1">
-                              <div>
-                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Full name</div>
-                                <div className="mt-1 font-semibold text-slate-950">{patient.name}</div>
-                              </div>
-                              <div>
-                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Card number</div>
-                                <div className="mt-1 font-semibold text-slate-950">{patient.cardNumber}</div>
-                              </div>
-                              <div>
-                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Birth date</div>
-                                <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.birthDate)}</div>
-                              </div>
-                              <div>
-                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sex</div>
-                                <div className="mt-1 font-semibold text-slate-950">{patient.sex ? (patient.sex === 'M' ? 'Male' : 'Female') : 'Not provided'}</div>
-                              </div>
-                              <div>
-                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Policy number</div>
-                                <div className="mt-1 font-semibold text-slate-950">{patient.policyNo || 'Not provided'}</div>
-                              </div>
-                              <div>
-                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Member since</div>
-                                <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.createdAt)}</div>
-                              </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="eyebrow">{editingPatientId === patient.id ? 'Edit patient' : 'Patient detail'}</div>
+                              {editingPatientId !== patient.id && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    startEditPatient(patient)
+                                  }}
+                                  className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-700 hover:text-teal-900"
+                                >
+                                  Edit
+                                </button>
+                              )}
                             </div>
+
+                            {editingPatientId === patient.id ? (
+                              <form
+                                onSubmit={(e) => {
+                                  e.preventDefault()
+                                  saveEditPatient(patient.id)
+                                }}
+                                className="mt-4 space-y-4"
+                              >
+                                <div className="field-shell">
+                                  <label className="field-label" htmlFor={`edit-card-${patient.id}`}>Emirates ID *</label>
+                                  <input
+                                    id={`edit-card-${patient.id}`}
+                                    type="text"
+                                    value={editForm.cardNumber}
+                                    onChange={(e) => setEditForm({ ...editForm, cardNumber: e.target.value })}
+                                    className="field-input"
+                                    required
+                                  />
+                                </div>
+                                <div className="field-shell">
+                                  <label className="field-label" htmlFor={`edit-name-${patient.id}`}>Full Name *</label>
+                                  <input
+                                    id={`edit-name-${patient.id}`}
+                                    type="text"
+                                    value={editForm.name}
+                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                    className="field-input"
+                                    required
+                                  />
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                  <div className="field-shell">
+                                    <label className="field-label" htmlFor={`edit-birthdate-${patient.id}`}>Birth Date</label>
+                                    <input
+                                      id={`edit-birthdate-${patient.id}`}
+                                      type="date"
+                                      value={editForm.birthDate}
+                                      onChange={(e) => setEditForm({ ...editForm, birthDate: e.target.value })}
+                                      className="field-input"
+                                    />
+                                  </div>
+                                  <div className="field-shell">
+                                    <label className="field-label" htmlFor={`edit-sex-${patient.id}`}>Sex</label>
+                                    <select
+                                      id={`edit-sex-${patient.id}`}
+                                      value={editForm.sex}
+                                      onChange={(e) => setEditForm({ ...editForm, sex: e.target.value })}
+                                      className="field-select"
+                                    >
+                                      <option value="">Select</option>
+                                      <option value="M">Male</option>
+                                      <option value="F">Female</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div className="field-shell">
+                                  <label className="field-label" htmlFor={`edit-policy-${patient.id}`}>Policy Number</label>
+                                  <input
+                                    id={`edit-policy-${patient.id}`}
+                                    type="text"
+                                    value={editForm.policyNo}
+                                    onChange={(e) => setEditForm({ ...editForm, policyNo: e.target.value })}
+                                    className="field-input"
+                                  />
+                                </div>
+                                <div className="field-shell">
+                                  <label className="field-label" htmlFor={`edit-assessment-${patient.id}`}>Assessment File Link</label>
+                                  <input
+                                    id={`edit-assessment-${patient.id}`}
+                                    type="url"
+                                    placeholder="https://drive.google.com/..."
+                                    value={editForm.assessmentFileLink}
+                                    onChange={(e) => setEditForm({ ...editForm, assessmentFileLink: e.target.value })}
+                                    className="field-input"
+                                  />
+                                </div>
+                                <div className="flex flex-wrap gap-3 pt-1">
+                                  <button type="submit" disabled={savingEdit} className="button-primary">
+                                    {savingEdit ? 'Saving...' : 'Save Changes'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={cancelEditPatient}
+                                    disabled={savingEdit}
+                                    className="button-secondary"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            ) : (
+                              <div className="mt-4 grid gap-4 xl:grid-cols-2 2xl:grid-cols-1">
+                                <div>
+                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Full name</div>
+                                  <div className="mt-1 font-semibold text-slate-950">{patient.name}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Card number</div>
+                                  <div className="mt-1 font-semibold text-slate-950">{patient.cardNumber}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Birth date</div>
+                                  <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.birthDate)}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sex</div>
+                                  <div className="mt-1 font-semibold text-slate-950">{patient.sex ? (patient.sex === 'M' ? 'Male' : 'Female') : 'Not provided'}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Policy number</div>
+                                  <div className="mt-1 font-semibold text-slate-950">{patient.policyNo || 'Not provided'}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Member since</div>
+                                  <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.createdAt)}</div>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           <div className="surface-card p-5">
@@ -402,6 +575,14 @@ export default function PatientsList() {
                               <Link href={`/claims/new?patientId=${patient.id}`} className="button-primary">
                                 New Claim
                               </Link>
+                              <button
+                                type="button"
+                                onClick={() => startEditPatient(patient)}
+                                disabled={savingEdit}
+                                className="button-secondary"
+                              >
+                                Edit Patient
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => deletePatient(patient.id, patient.name)}
