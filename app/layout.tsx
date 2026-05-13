@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { IBM_Plex_Sans, Manrope, Roboto, Space_Grotesk } from 'next/font/google'
+import { IBM_Plex_Sans, Manrope, Space_Grotesk } from 'next/font/google'
 import Link from 'next/link'
 import Providers from './providers'
 import AuthNav from '@/components/AuthNav'
@@ -23,12 +23,6 @@ const sectionFont = Manrope({
   variable: '--font-section',
 })
 
-const dataFont = Roboto({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-data',
-})
-
 export const metadata: Metadata = {
   title: 'Dr. Ramsha Claims Management',
   description: 'Healthcare claim form submission system',
@@ -41,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${bodyFont.variable} ${displayFont.variable} ${sectionFont.variable} ${dataFont.variable}`}>
+      <body className={`${bodyFont.variable} ${displayFont.variable} ${sectionFont.variable}`}>
         <Providers>
           <div className="app-shell">
             <header className="app-header">

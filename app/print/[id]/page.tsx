@@ -67,12 +67,174 @@ function Check({ checked, label }: { checked?: boolean; label: string }) {
   )
 }
 
+type FontCategory = 'Handwriting' | 'Sans-serif' | 'Serif' | 'Monospace'
+
+type FontOption = {
+  id: string
+  label: string
+  cssFamily: string
+  google: string
+  fallback: string
+  size: string
+  category: FontCategory
+}
+
+const FONT_OPTIONS: FontOption[] = [
+  // Handwriting (filled-form feel)
+  { id: 'patrick-hand',     label: 'Patrick Hand (neat handwriting)',  cssFamily: 'Patrick Hand',         google: 'Patrick+Hand',                  fallback: 'cursive',    size: '13px',   category: 'Handwriting' },
+  { id: 'caveat',           label: 'Caveat (cursive handwriting)',     cssFamily: 'Caveat',               google: 'Caveat:wght@400;600',           fallback: 'cursive',    size: '15px',   category: 'Handwriting' },
+  { id: 'kalam',            label: 'Kalam (clean handwriting)',        cssFamily: 'Kalam',                google: 'Kalam:wght@300;400',            fallback: 'cursive',    size: '12.5px', category: 'Handwriting' },
+  { id: 'architects',       label: "Architects Daughter (block hand)", cssFamily: 'Architects Daughter',  google: 'Architects+Daughter',           fallback: 'cursive',    size: '12px',   category: 'Handwriting' },
+  { id: 'indie-flower',     label: 'Indie Flower (rounded hand)',      cssFamily: 'Indie Flower',         google: 'Indie+Flower',                  fallback: 'cursive',    size: '13px',   category: 'Handwriting' },
+  { id: 'reenie-beanie',    label: 'Reenie Beanie (loose hand)',       cssFamily: 'Reenie Beanie',        google: 'Reenie+Beanie',                 fallback: 'cursive',    size: '15px',   category: 'Handwriting' },
+  { id: 'shadows',          label: 'Shadows Into Light (light hand)',  cssFamily: 'Shadows Into Light',   google: 'Shadows+Into+Light',            fallback: 'cursive',    size: '13px',   category: 'Handwriting' },
+  { id: 'homemade-apple',   label: 'Homemade Apple (formal script)',   cssFamily: 'Homemade Apple',       google: 'Homemade+Apple',                fallback: 'cursive',    size: '11px',   category: 'Handwriting' },
+  { id: 'dancing-script',   label: 'Dancing Script (flowing script)',  cssFamily: 'Dancing Script',       google: 'Dancing+Script:wght@400;500',   fallback: 'cursive',    size: '14px',   category: 'Handwriting' },
+
+  // Sans-serif (standard professional)
+  { id: 'inter',            label: 'Inter',                            cssFamily: 'Inter',                google: 'Inter:wght@400;500;600',        fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'roboto',           label: 'Roboto',                           cssFamily: 'Roboto',               google: 'Roboto:wght@400;500',           fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'open-sans',        label: 'Open Sans',                        cssFamily: 'Open Sans',            google: 'Open+Sans:wght@400;600',        fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'lato',             label: 'Lato',                             cssFamily: 'Lato',                 google: 'Lato:wght@400;700',             fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'source-sans-3',    label: 'Source Sans 3',                    cssFamily: 'Source Sans 3',        google: 'Source+Sans+3:wght@400;600',    fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'work-sans',        label: 'Work Sans',                        cssFamily: 'Work Sans',            google: 'Work+Sans:wght@400;500',        fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'noto-sans',        label: 'Noto Sans',                        cssFamily: 'Noto Sans',            google: 'Noto+Sans:wght@400;500',        fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'nunito',           label: 'Nunito (rounded)',                 cssFamily: 'Nunito',               google: 'Nunito:wght@400;600',           fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'manrope',          label: 'Manrope',                          cssFamily: 'Manrope',              google: 'Manrope:wght@400;500;700',      fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
+
+  // Serif (formal documents)
+  { id: 'lora',             label: 'Lora',                             cssFamily: 'Lora',                 google: 'Lora:wght@400;600',             fallback: 'serif',      size: '10.5px', category: 'Serif' },
+  { id: 'pt-serif',         label: 'PT Serif',                         cssFamily: 'PT Serif',             google: 'PT+Serif:wght@400;700',         fallback: 'serif',      size: '10.5px', category: 'Serif' },
+  { id: 'merriweather',     label: 'Merriweather',                     cssFamily: 'Merriweather',         google: 'Merriweather:wght@400;700',     fallback: 'serif',      size: '10px',   category: 'Serif' },
+  { id: 'source-serif-4',   label: 'Source Serif 4',                   cssFamily: 'Source Serif 4',       google: 'Source+Serif+4:wght@400;600',   fallback: 'serif',      size: '10.5px', category: 'Serif' },
+  { id: 'libre-baskerville',label: 'Libre Baskerville',                cssFamily: 'Libre Baskerville',    google: 'Libre+Baskerville:wght@400;700',fallback: 'serif',      size: '10px',   category: 'Serif' },
+  { id: 'eb-garamond',      label: 'EB Garamond (classic)',            cssFamily: 'EB Garamond',          google: 'EB+Garamond:wght@400;500;700',  fallback: 'serif',      size: '11.5px', category: 'Serif' },
+  { id: 'crimson-pro',      label: 'Crimson Pro (book)',               cssFamily: 'Crimson Pro',          google: 'Crimson+Pro:wght@400;600',      fallback: 'serif',      size: '11px',   category: 'Serif' },
+  { id: 'playfair',         label: 'Playfair Display (high contrast)', cssFamily: 'Playfair Display',     google: 'Playfair+Display:wght@400;600', fallback: 'serif',      size: '10.5px', category: 'Serif' },
+  { id: 'roboto-slab',      label: 'Roboto Slab (slab serif)',         cssFamily: 'Roboto Slab',          google: 'Roboto+Slab:wght@400;600',      fallback: 'serif',      size: '10.5px', category: 'Serif' },
+
+  // Monospace (typewriter / data feel)
+  { id: 'roboto-mono',      label: 'Roboto Mono',                      cssFamily: 'Roboto Mono',          google: 'Roboto+Mono:wght@400;500',      fallback: 'monospace',  size: '10px',   category: 'Monospace' },
+  { id: 'courier-prime',    label: 'Courier Prime (typewriter)',       cssFamily: 'Courier Prime',        google: 'Courier+Prime:wght@400;700',    fallback: 'monospace',  size: '10.5px', category: 'Monospace' },
+  { id: 'ibm-plex-mono',    label: 'IBM Plex Mono',                    cssFamily: 'IBM Plex Mono',        google: 'IBM+Plex+Mono:wght@400;500',    fallback: 'monospace',  size: '10px',   category: 'Monospace' },
+  { id: 'jetbrains-mono',   label: 'JetBrains Mono',                   cssFamily: 'JetBrains Mono',       google: 'JetBrains+Mono:wght@400;500',   fallback: 'monospace',  size: '10px',   category: 'Monospace' },
+  { id: 'space-mono',       label: 'Space Mono',                       cssFamily: 'Space Mono',           google: 'Space+Mono:wght@400;700',       fallback: 'monospace',  size: '10px',   category: 'Monospace' },
+]
+
+const FONT_CATEGORIES: FontCategory[] = ['Handwriting', 'Sans-serif', 'Serif', 'Monospace']
+
+const DEFAULT_FONT_ID = 'patrick-hand'
+const DEFAULT_FONT_COLOR = '#111111'
+const FONT_STORAGE_KEY = 'claim-print:fill-font'
+const FONT_SIZE_STORAGE_KEY = 'claim-print:fill-size'
+const FONT_COLOR_STORAGE_KEY = 'claim-print:fill-color'
+const MIN_FONT_SIZE = 8
+const MAX_FONT_SIZE = 24
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/
+
+const parsePx = (value: string) => parseFloat(value.replace('px', '')) || 13
+const clampSize = (value: number) =>
+  Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, Number.isFinite(value) ? value : 13))
+
 export default function PrintClaimPage() {
   const params = useParams<{ id: string }>()
   const claimId = params?.id
   const [claim, setClaim] = useState<ClaimResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [selectedFontId, setSelectedFontId] = useState<string>(DEFAULT_FONT_ID)
+  const [fontSize, setFontSize] = useState<number>(() =>
+    parsePx(FONT_OPTIONS.find((o) => o.id === DEFAULT_FONT_ID)?.size || '13px')
+  )
+  const [fontColor, setFontColor] = useState<string>(DEFAULT_FONT_COLOR)
+
+  useEffect(() => {
+    try {
+      const storedFont = window.localStorage.getItem(FONT_STORAGE_KEY)
+      if (storedFont && FONT_OPTIONS.some((opt) => opt.id === storedFont)) {
+        setSelectedFontId(storedFont)
+      }
+      const storedSize = window.localStorage.getItem(FONT_SIZE_STORAGE_KEY)
+      if (storedSize) {
+        const parsed = parseFloat(storedSize)
+        if (Number.isFinite(parsed)) setFontSize(clampSize(parsed))
+      }
+      const storedColor = window.localStorage.getItem(FONT_COLOR_STORAGE_KEY)
+      if (storedColor && HEX_COLOR_RE.test(storedColor)) {
+        setFontColor(storedColor)
+      }
+    } catch {
+      // ignore storage access errors (private mode, etc.)
+    }
+  }, [])
+
+  useEffect(() => {
+    const opt = FONT_OPTIONS.find((o) => o.id === selectedFontId)
+    if (!opt) return
+    const linkId = `font-loader-${opt.id}`
+    if (!document.getElementById(linkId)) {
+      const link = document.createElement('link')
+      link.id = linkId
+      link.rel = 'stylesheet'
+      link.href = `https://fonts.googleapis.com/css2?family=${opt.google}&display=swap`
+      document.head.appendChild(link)
+    }
+    try {
+      window.localStorage.setItem(FONT_STORAGE_KEY, opt.id)
+    } catch {
+      // ignore storage access errors
+    }
+  }, [selectedFontId])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(FONT_SIZE_STORAGE_KEY, String(fontSize))
+    } catch {
+      // ignore storage access errors
+    }
+  }, [fontSize])
+
+  useEffect(() => {
+    if (!HEX_COLOR_RE.test(fontColor)) return
+    try {
+      window.localStorage.setItem(FONT_COLOR_STORAGE_KEY, fontColor)
+    } catch {
+      // ignore storage access errors
+    }
+  }, [fontColor])
+
+  const activeFont = useMemo(
+    () => FONT_OPTIONS.find((o) => o.id === selectedFontId) || FONT_OPTIONS[0],
+    [selectedFontId]
+  )
+
+  const handleFontChange = (id: string) => {
+    setSelectedFontId(id)
+    const opt = FONT_OPTIONS.find((o) => o.id === id)
+    if (opt) setFontSize(clampSize(parsePx(opt.size)))
+  }
+
+  const handleSizeChange = (value: number) => {
+    setFontSize(clampSize(value))
+  }
+
+  const handleResetSize = () => {
+    setFontSize(clampSize(parsePx(activeFont.size)))
+  }
+
+  const handleColorChange = (value: string) => {
+    if (HEX_COLOR_RE.test(value)) setFontColor(value)
+  }
+
+  const handleResetColor = () => {
+    setFontColor(DEFAULT_FONT_COLOR)
+  }
+
+  const fontStyleVars = {
+    ['--font-fill-active' as string]: `'${activeFont.cssFamily}', ${activeFont.fallback}`,
+    ['--font-fill-size' as string]: `${fontSize}px`,
+    ['--font-fill-color' as string]: fontColor,
+  } as React.CSSProperties
 
   useEffect(() => {
     if (!claimId) return
@@ -105,12 +267,82 @@ export default function PrintClaimPage() {
         <>
           <div className="toolbar no-print">
             <button className="primary" onClick={() => window.print()}>Download PDF</button>
+            <label className="font-picker">
+              <span className="font-picker__label">Field font</span>
+              <select
+                className="font-picker__select"
+                value={selectedFontId}
+                onChange={(e) => handleFontChange(e.target.value)}
+              >
+                {FONT_CATEGORIES.map((category) => {
+                  const opts = FONT_OPTIONS.filter((o) => o.category === category)
+                  if (opts.length === 0) return null
+                  return (
+                    <optgroup key={category} label={category}>
+                      {opts.map((opt) => (
+                        <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      ))}
+                    </optgroup>
+                  )
+                })}
+              </select>
+            </label>
+            <label className="font-picker">
+              <span className="font-picker__label">Size</span>
+              <input
+                className="font-picker__size-input"
+                type="number"
+                min={MIN_FONT_SIZE}
+                max={MAX_FONT_SIZE}
+                step={0.5}
+                value={fontSize}
+                onChange={(e) => handleSizeChange(parseFloat(e.target.value))}
+              />
+              <span className="font-picker__unit">px</span>
+              <button
+                type="button"
+                className="font-picker__reset"
+                onClick={handleResetSize}
+                title={`Reset to ${activeFont.label} default (${activeFont.size})`}
+              >
+                Reset
+              </button>
+            </label>
+            <label className="font-picker">
+              <span className="font-picker__label">Color</span>
+              <input
+                className="font-picker__color-input"
+                type="color"
+                value={fontColor}
+                onChange={(e) => handleColorChange(e.target.value)}
+                aria-label="Field text color"
+              />
+              <input
+                className="font-picker__color-hex"
+                type="text"
+                value={fontColor}
+                onChange={(e) => {
+                  const next = e.target.value.startsWith('#') ? e.target.value : `#${e.target.value}`
+                  handleColorChange(next)
+                }}
+                maxLength={7}
+                aria-label="Field text color hex value"
+              />
+              <button
+                type="button"
+                className="font-picker__reset"
+                onClick={handleResetColor}
+                title={`Reset to default (${DEFAULT_FONT_COLOR})`}
+              >
+                Reset
+              </button>
+            </label>
             <Link href={`/claims/new?claimId=${claim.id}`} className="btn-link back-btn" title="Close">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </Link>
           </div>
 
-          <div className="page-wrap">
+          <div className="page-wrap" style={fontStyleVars}>
             <div className="page" id="formPage">
               <div className="top">
                 <div className="logo-block">
@@ -129,7 +361,7 @@ export default function PrintClaimPage() {
                 </colgroup>
                 <tbody>
                   <tr>
-                    <td><span className="label">Date:</span> <span className="data-roboto">{fmtDate(claim.date)}</span></td>
+                    <td><span className="label">Date:</span> <span className="data-fill">{fmtDate(claim.date)}</span></td>
                     <td colSpan={3} className="provider-cell">
                       <span className="label">Provider:</span> {claim.provider || ''}
                       <span className="caret" aria-hidden="true">⌄</span>
@@ -140,16 +372,16 @@ export default function PrintClaimPage() {
 
                   <tr>
                     <td colSpan={3}>
-                      <span className="label">Patient&apos;s Name(as on card):</span> <span className="data-roboto">{claim.patient?.name || ''}</span>
+                      <span className="label">Patient&apos;s Name(as on card):</span> <span className="data-fill">{claim.patient?.name || ''}</span>
                     </td>
                     <td>&nbsp;</td>
                   </tr>
 
                   <tr>
-                    <td><span className="label">Card #</span> <span className="data-roboto">{claim.patient?.cardNumber || ''}</span></td>
+                    <td><span className="label">Card #</span> <span className="data-fill">{claim.patient?.cardNumber || ''}</span></td>
                     <td><span className="label">policy No.</span> {claim.patient?.policyNo || ''}</td>
-                    <td><span className="label">BirthDate:</span> <span className="data-roboto">{fmtDate(claim.patient?.birthDate)}</span></td>
-                    <td><span className="label">Sex:</span> <span className="data-roboto">{claim.patient?.sex || ''}</span></td>
+                    <td><span className="label">BirthDate:</span> <span className="data-fill">{fmtDate(claim.patient?.birthDate)}</span></td>
+                    <td><span className="label">Sex:</span> <span className="data-fill">{claim.patient?.sex || ''}</span></td>
                   </tr>
 
                   <tr>
@@ -167,7 +399,7 @@ export default function PrintClaimPage() {
                     <td colSpan={3}>
                       <div className="field-row">
                         <span className="label nowrap2">Symptom(s) as described by<br />patient:</span>
-                        <div className="pre value data-roboto">{claim.symptoms || ''}</div>
+                        <div className="pre value data-fill">{claim.symptoms || ''}</div>
                       </div>
                     </td>
                   </tr>
@@ -183,7 +415,7 @@ export default function PrintClaimPage() {
                     <td colSpan={2} className="p3">
                       <div className="field-row">
                         <span className="label">If Yes<br />Specify:</span>
-                        <div className="pre value data-roboto">{claim.additionalNotes || ''}</div>
+                        <div className="pre value data-fill">{claim.additionalNotes || ''}</div>
                       </div>
                     </td>
                   </tr>
@@ -197,7 +429,7 @@ export default function PrintClaimPage() {
                     <td colSpan={4} className="lh18">
                       <div className="field-row">
                         <span className="label">Clinical<br />Findings:</span>
-                        <div className="pre value data-roboto">{claim.clinicalFindings || ''}</div>
+                        <div className="pre value data-fill">{claim.clinicalFindings || ''}</div>
                       </div>
                     </td>
                   </tr>
@@ -242,7 +474,7 @@ export default function PrintClaimPage() {
                     <td colSpan={4} className="lh18 comments-cell">
                       <div className="field-row">
                         <span className="label">Comments</span>
-                        <div className="pre value data-roboto">{claim.comments || ''}</div>
+                        <div className="pre value data-fill">{claim.comments || ''}</div>
                       </div>
                     </td>
                   </tr>
@@ -287,7 +519,7 @@ export default function PrintClaimPage() {
                       <div>
                         <span className="label">Full details of proposed treatment/ Surgery/ Medicine:</span>
                       </div>
-                      <div className="pre box tall data-roboto">{claim.proposedTreatment || ''}</div>
+                      <div className="pre box tall data-fill">{claim.proposedTreatment || ''}</div>
                     </td>
                   </tr>
                   <tr>
@@ -322,7 +554,7 @@ export default function PrintClaimPage() {
 
                   <tr>
                     <td colSpan={2} className="phys-cell">
-                      <span className="label-bold">Treating Physician Name:</span> <span className="data-roboto">{claim.treatingPhysicianName || ''}</span>
+                      <span className="label-bold">Treating Physician Name:</span> <span className="data-fill">{claim.treatingPhysicianName || ''}</span>
                     </td>
                     <td colSpan={2} rowSpan={3} className="patient-sig-cell">
                       <div className="patient-sig-label"><em><strong>Patient/Guardian signature</strong></em></div>
@@ -348,8 +580,8 @@ export default function PrintClaimPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan={2} className="phys-cell date-cell"><span className="label">Date</span> <span className="data-roboto">{fmtDate(claim.date)}</span></td>
-                    <td colSpan={2} className="date-cell"><span className="label">Date</span> <span className="data-roboto">{fmtDate(claim.date)}</span></td>
+                    <td colSpan={2} className="phys-cell date-cell"><span className="label">Date</span> <span className="data-fill">{fmtDate(claim.date)}</span></td>
+                    <td colSpan={2} className="date-cell"><span className="label">Date</span> <span className="data-fill">{fmtDate(claim.date)}</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -363,9 +595,25 @@ export default function PrintClaimPage() {
         :global(.app-header){ display:none !important; }
         :global(.app-main){ padding:0 !important; }
         :global(.app-main__inner){ max-width:none !important; padding:0 !important; }
-        .toolbar{ position:sticky; top:0; z-index:20; background:white; border-bottom:1px solid #ddd; padding:10px 14px; display:flex; gap:10px; align-items:center; }
+        .toolbar{ position:sticky; top:0; z-index:20; background:white; border-bottom:1px solid #ddd; padding:10px 14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
         .toolbar button, .btn-link{ border:1px solid #cfcfcf; background:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; color:#111; text-decoration:none; }
         .toolbar button.primary{ background:#111827; color:#fff; border-color:#111827; }
+        .font-picker{ display:flex; align-items:center; gap:6px; padding:0 4px; }
+        .font-picker__label{ font-size:12px; font-weight:600; color:#374151; text-transform:uppercase; letter-spacing:0.06em; }
+        .font-picker__select{ border:1px solid #cfcfcf; background:#fff; padding:7px 10px; border-radius:8px; font-size:13px; font-weight:500; color:#111; cursor:pointer; min-width:240px; }
+        .font-picker__select:focus{ outline:2px solid #2563eb; outline-offset:1px; }
+        .font-picker__size-input{ border:1px solid #cfcfcf; background:#fff; padding:7px 8px; border-radius:8px; font-size:13px; font-weight:500; color:#111; width:72px; text-align:center; }
+        .font-picker__size-input:focus{ outline:2px solid #2563eb; outline-offset:1px; }
+        .font-picker__unit{ font-size:12px; color:#6b7280; font-weight:600; }
+        .font-picker__color-input{ width:36px; height:36px; border:1px solid #cfcfcf; border-radius:8px; padding:2px; cursor:pointer; background:#fff; }
+        .font-picker__color-input::-webkit-color-swatch-wrapper{ padding:0; }
+        .font-picker__color-input::-webkit-color-swatch{ border:none; border-radius:6px; }
+        .font-picker__color-input::-moz-color-swatch{ border:none; border-radius:6px; }
+        .font-picker__color-input:focus{ outline:2px solid #2563eb; outline-offset:1px; }
+        .font-picker__color-hex{ border:1px solid #cfcfcf; background:#fff; padding:7px 8px; border-radius:8px; font-size:12px; font-weight:500; color:#111; width:88px; text-align:center; font-family:'SFMono-Regular','Menlo','Monaco',monospace; text-transform:uppercase; }
+        .font-picker__color-hex:focus{ outline:2px solid #2563eb; outline-offset:1px; }
+        .font-picker__reset{ border:1px solid #cfcfcf; background:#f9fafb; padding:6px 10px; border-radius:8px; font-size:12px; font-weight:600; color:#374151; cursor:pointer; }
+        .font-picker__reset:hover{ background:#f3f4f6; }
         .back-btn{ margin-left:auto; display:flex; align-items:center; justify-content:center; width:38px; height:38px; padding:0; }
         .page-state{ padding:24px; }
 
@@ -380,8 +628,8 @@ export default function PrintClaimPage() {
         table.form{ width:100%; border-collapse:collapse; margin-top:1mm; font-size:11.5px; table-layout:fixed; border:1px solid #888; }
         table.form td{ border:1px solid #888; vertical-align:top; padding:5px 7px; word-break:break-word; background:#fff; }
 
-        /* Roboto only for the specific dynamic database values listed below */
-        .data-roboto{ font-family: 'Roboto', var(--font-data), system-ui, sans-serif; font-size: 10.5px; font-weight: 500; color:#111; letter-spacing:0; }
+        /* Active font for the dynamic database values, controlled by the toolbar picker */
+        .data-fill{ font-family: var(--font-fill-active, 'Patrick Hand', cursive); font-size: var(--font-fill-size, 13px); font-weight: 400; color: var(--font-fill-color, #111); letter-spacing:0.2px; }
 
         .provider-cell{ position:relative; padding-right:20px !important; }
         .provider-cell .caret{ position:absolute; right:8px; top:3px; font-size:14px; color:#666; line-height:1; }
@@ -444,9 +692,9 @@ export default function PrintClaimPage() {
         .phys-cell{ border-right:none !important; padding:5px 8px !important; }
         .phys-cell + td{ border-left:1px solid #888; }
 
-        .sig-stamp-row{ display:flex; align-items:flex-start; gap:12px; min-height:54px; }
+        .sig-stamp-row{ display:flex; align-items:flex-start; gap:12px; min-height:64px; }
         .sig-stamp-label{ flex:0 0 auto; }
-        .sig-stamp-img{ flex:1 1 auto; max-height:78px; max-width:100%; object-fit:contain; object-position:center center; }
+        .sig-stamp-img{ flex:1 1 auto; max-height:100px; max-width:100%; object-fit:contain; object-position:center center; }
         .patient-sig-cell{ vertical-align:top; padding:5px 8px !important; }
         .patient-sig-label{ font-style:italic; font-weight:700; font-size:11px; padding:0 0 6px 0; margin:0 0 6px 0; text-align:left; border-bottom:1px solid #888; }
         .patient-sig-img{ max-height:70px; max-width:100%; object-fit:contain; display:block; margin:4px 0 0 0; }
