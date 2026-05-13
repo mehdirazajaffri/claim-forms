@@ -156,8 +156,10 @@ export default function PrintClaimPage() {
                   </div>
                 </td>
                 <td colSpan={9}>
-                  <div className="label">Symptom(s) as described by <br />patient:</div>
-                  <div className="pre">{claim.symptoms || ''}</div>
+                  <div className="field-row">
+                    <span className="label side-label">Symptom(s) as described by patient:</span>
+                    <div className="pre grow">{claim.symptoms || ''}</div>
+                  </div>
                 </td>
               </tr>
               <tr className="row-xl">
@@ -168,14 +170,26 @@ export default function PrintClaimPage() {
                     <Check checked={claim.familyHistory} label="Family History of any Illness" />
                   </div>
                 </td>
-                <td colSpan={6}><span className="label">If Yes Specify:</span><div className="pre">{claim.additionalNotes || ''}</div></td>
+                <td colSpan={6}>
+                  <div className="field-row">
+                    <span className="label side-label">If Yes Specify:</span>
+                    <div className="pre grow">{claim.additionalNotes || ''}</div>
+                  </div>
+                </td>
               </tr>
 
               <tr>
                 <td colSpan={6} className="subsection">OBJECTIVE/ASSESSMENT</td>
                 <td colSpan={6} className="subsection right-note">To be completed by physician</td>
               </tr>
-              <tr className="row-xl"><td colSpan={12}><span className="label">Clinical <br />Findings:</span><div className="pre">{claim.clinicalFindings || ''}</div></td></tr>
+              <tr className="row-xl">
+                <td colSpan={12}>
+                  <div className="field-row">
+                    <span className="label side-label">Clinical Findings:</span>
+                    <div className="pre grow">{claim.clinicalFindings || ''}</div>
+                  </div>
+                </td>
+              </tr>
               <tr className="row-md">
                 <td colSpan={12}>
                   <div className="row-checks">
@@ -190,7 +204,14 @@ export default function PrintClaimPage() {
                   </div>
                 </td>
               </tr>
-              <tr><td colSpan={12}><span className="label">Other(s), Explain</span> {claim.otherCause || ''}</td></tr>
+              <tr>
+                <td colSpan={12}>
+                  <div className="field-row">
+                    <span className="label side-label">Other(s), Explain</span>
+                    <div className="pre grow">{claim.otherCause || ''}</div>
+                  </div>
+                </td>
+              </tr>
               <tr>
                 <td colSpan={12}>
                   <div className="row-checks">
@@ -202,7 +223,14 @@ export default function PrintClaimPage() {
                   </div>
                 </td>
               </tr>
-              <tr><td colSpan={12}><span className="label">Comments</span><div className="pre">{claim.comments || ''}</div></td></tr>
+              <tr>
+                <td colSpan={12}>
+                  <div className="field-row">
+                    <span className="label side-label">Comments</span>
+                    <div className="pre grow">{claim.comments || ''}</div>
+                  </div>
+                </td>
+              </tr>
 
               <tr>
                 <td colSpan={12} className="subsection">
@@ -312,6 +340,10 @@ export default function PrintClaimPage() {
         .check-item{ display:inline-flex; align-items:center; margin-right:12px; margin-bottom:3px; white-space:nowrap; gap:4px; }
         .check-mark{ font-size:11px; line-height:1; color:#2a2a2a; }
         .pre{ white-space:pre-wrap; line-height:1.2; }
+        .field-row{ display:flex; gap:8px; align-items:flex-start; }
+        .field-row.stack-gap{ margin-bottom:10px; }
+        .field-row > .side-label{ flex:0 0 auto; width:max-content; max-width:min(34%, 11rem); min-width:0; padding-right:4px; }
+        .field-row > .grow{ flex:1 1 auto; min-width:0; }
         .box{ min-height:32px; }
         .box.tall{ min-height:74px; }
         .use-only-h{ background:#dcccb6 !important; font-weight:700; color:#3d2f1e; }
