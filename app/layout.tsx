@@ -35,7 +35,7 @@ export default function RootLayout({
             <header className="app-header">
               <div className="app-header__inner">
                 <Link href="/" className="app-brand" aria-label="Go to dashboard">
-                  <span className="app-brand__eyebrow">Almadallah</span>
+                  <span className="app-brand__eyebrow">Dr. Ramsha</span>
                   <span className="app-brand__title">Claims Workspace</span>
                 </Link>
 
