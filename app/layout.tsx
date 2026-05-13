@@ -18,7 +18,7 @@ const displayFont = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'Almadallah Claims Management',
+  title: 'Dr. Ramsha Claims Management',
   description: 'Healthcare claim form submission system',
 }
 
