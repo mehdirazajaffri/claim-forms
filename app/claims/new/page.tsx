@@ -2,7 +2,7 @@ import ClaimForm from '@/components/ClaimForm'
 import { Suspense } from 'react'
 
 export const metadata = {
-  title: 'Create Claim - Almadallah Claims',
+  title: 'Create Claim',
   description: 'Create a new healthcare claim',
 }
 

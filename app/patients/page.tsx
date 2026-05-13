@@ -1,7 +1,7 @@
 import PatientsList from '@/components/PatientsList'
 
 export const metadata = {
-  title: 'Patients - Almadallah Claims',
+  title: 'Patients',
   description: 'View and search all patients and their claims',
 }
 
