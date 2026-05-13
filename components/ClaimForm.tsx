@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import ConfirmDialog from './ConfirmDialog'
 
@@ -67,6 +67,7 @@ interface FormData {
 
 export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const { register, handleSubmit, reset, setValue } = useForm<FormData>()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [patient, setPatient] = useState<Patient | null>(null)
   const [patients, setPatients] = useState<Patient[]>([])
@@ -283,17 +284,6 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
     }
   }
 
-  const getLatestClaimId = (claims: Patient['claims'] | undefined) => {
-    if (!claims || claims.length === 0) return null
-
-    return [...claims]
-      .sort((a, b) => {
-        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
-        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
-        return bTime - aTime
-      })[0]?.id || null
-  }
-
   const onSubmit = async (data: FormData) => {
     setLoading(true)
     setSubmitError('')
@@ -317,17 +307,16 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
          physicianSignature: physicianSignatureImage,
       })
 
-      setLastSavedClaimId(claimResponse.data.id)
-      setEditingClaimId(null)
+      const newClaimId = claimResponse.data.id as string
+      setLastSavedClaimId(newClaimId)
+      setEditingClaimId(newClaimId)
 
       setSuccess(true)
-        if (onSuccess) onSuccess()
+      if (onSuccess) onSuccess()
       setTimeout(() => setSuccess(false), 3000)
-      reset()
-      setCardNumber('')
-      setPatient(null)
-      setSearchFeedback('')
+      setSearchFeedback('Claim saved. You can now download or update it below.')
       fetchPatients()
+      router.replace(`/claims/new?claimId=${newClaimId}`)
     } catch (error) {
       console.error('Failed to submit claim:', error)
       setSubmitError('Error submitting claim. Please review required details and retry.')
@@ -472,14 +461,14 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
                 <div className="text-sm">
                   <strong>Patient:</strong> {patient.name} | <strong>Card:</strong> {patient.cardNumber} | <strong>Claims:</strong> {patient.claims?.length || 0}
                 </div>
-                {getLatestClaimId(patient.claims) && (
+                {(editingClaimId || lastSavedClaimId) && (
                   <a
-                    href={`/print/${getLatestClaimId(patient.claims)}`}
+                    href={`/print/${editingClaimId || lastSavedClaimId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="button-secondary min-h-[38px] px-3 text-xs"
                   >
-                    Download Latest Claim PDF
+                    Download Claim PDF
                   </a>
                 )}
               </div>
@@ -502,7 +491,7 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
                 rel="noopener noreferrer"
                 className="button-primary"
               >
-                Download Submitted Claim PDF
+                Download Claim PDF
               </a>
             </div>
           )}
