@@ -129,7 +129,7 @@ export default function PrintClaimPage() {
                 </colgroup>
                 <tbody>
                   <tr>
-                    <td><span className="label">Date:</span> {fmtDate(claim.date)}</td>
+                    <td><span className="label">Date:</span> <span className="data-roboto">{fmtDate(claim.date)}</span></td>
                     <td colSpan={3} className="provider-cell">
                       <span className="label">Provider:</span> {claim.provider || ''}
                       <span className="caret" aria-hidden="true">⌄</span>
@@ -140,16 +140,16 @@ export default function PrintClaimPage() {
 
                   <tr>
                     <td colSpan={3}>
-                      <span className="label">Patient&apos;s Name(as on card):</span> {claim.patient?.name || ''}
+                      <span className="label">Patient&apos;s Name(as on card):</span> <span className="data-roboto">{claim.patient?.name || ''}</span>
                     </td>
                     <td>&nbsp;</td>
                   </tr>
 
                   <tr>
-                    <td><span className="label">Card #</span> {claim.patient?.cardNumber || ''}</td>
+                    <td><span className="label">Card #</span> <span className="data-roboto">{claim.patient?.cardNumber || ''}</span></td>
                     <td><span className="label">policy No.</span> {claim.patient?.policyNo || ''}</td>
-                    <td><span className="label">BirthDate:</span> {fmtDate(claim.patient?.birthDate)}</td>
-                    <td><span className="label">Sex:</span> {claim.patient?.sex || ''}</td>
+                    <td><span className="label">BirthDate:</span> <span className="data-roboto">{fmtDate(claim.patient?.birthDate)}</span></td>
+                    <td><span className="label">Sex:</span> <span className="data-roboto">{claim.patient?.sex || ''}</span></td>
                   </tr>
 
                   <tr>
@@ -167,7 +167,7 @@ export default function PrintClaimPage() {
                     <td colSpan={3}>
                       <div className="field-row">
                         <span className="label nowrap2">Symptom(s) as described by<br />patient:</span>
-                        <div className="pre value">{claim.symptoms || ''}</div>
+                        <div className="pre value data-roboto">{claim.symptoms || ''}</div>
                       </div>
                     </td>
                   </tr>
@@ -183,7 +183,7 @@ export default function PrintClaimPage() {
                     <td colSpan={2} className="p3">
                       <div className="field-row">
                         <span className="label">If Yes<br />Specify:</span>
-                        <div className="pre value">{claim.additionalNotes || ''}</div>
+                        <div className="pre value data-roboto">{claim.additionalNotes || ''}</div>
                       </div>
                     </td>
                   </tr>
@@ -197,7 +197,7 @@ export default function PrintClaimPage() {
                     <td colSpan={4} className="lh18">
                       <div className="field-row">
                         <span className="label">Clinical<br />Findings:</span>
-                        <div className="pre value">{claim.clinicalFindings || ''}</div>
+                        <div className="pre value data-roboto">{claim.clinicalFindings || ''}</div>
                       </div>
                     </td>
                   </tr>
@@ -242,7 +242,7 @@ export default function PrintClaimPage() {
                     <td colSpan={4} className="lh18 comments-cell">
                       <div className="field-row">
                         <span className="label">Comments</span>
-                        <div className="pre value">{claim.comments || ''}</div>
+                        <div className="pre value data-roboto">{claim.comments || ''}</div>
                       </div>
                     </td>
                   </tr>
@@ -287,7 +287,7 @@ export default function PrintClaimPage() {
                       <div>
                         <span className="label">Full details of proposed treatment/ Surgery/ Medicine:</span>
                       </div>
-                      <div className="pre box tall">{claim.proposedTreatment || ''}</div>
+                      <div className="pre box tall data-roboto">{claim.proposedTreatment || ''}</div>
                     </td>
                   </tr>
                   <tr>
@@ -322,7 +322,7 @@ export default function PrintClaimPage() {
 
                   <tr>
                     <td colSpan={2} className="phys-cell">
-                      <span className="label-bold">Treating Physician Name:</span> {claim.treatingPhysicianName || ''}
+                      <span className="label-bold">Treating Physician Name:</span> <span className="data-roboto">{claim.treatingPhysicianName || ''}</span>
                     </td>
                     <td colSpan={2} rowSpan={3} className="patient-sig-cell">
                       <div className="patient-sig-label"><em><strong>Patient/Guardian signature</strong></em></div>
@@ -348,8 +348,8 @@ export default function PrintClaimPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan={2} className="phys-cell date-cell"><span className="label">Date</span> {fmtDate(claim.date)}</td>
-                    <td colSpan={2} className="date-cell"><span className="label">Date</span> {fmtDate(claim.date)}</td>
+                    <td colSpan={2} className="phys-cell date-cell"><span className="label">Date</span> <span className="data-roboto">{fmtDate(claim.date)}</span></td>
+                    <td colSpan={2} className="date-cell"><span className="label">Date</span> <span className="data-roboto">{fmtDate(claim.date)}</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -380,13 +380,16 @@ export default function PrintClaimPage() {
         table.form{ width:100%; border-collapse:collapse; margin-top:1mm; font-size:11.5px; table-layout:fixed; border:1px solid #888; }
         table.form td{ border:1px solid #888; vertical-align:top; padding:5px 7px; word-break:break-word; background:#fff; }
 
+        /* Roboto only for the specific dynamic database values listed below */
+        .data-roboto{ font-family: 'Roboto', var(--font-data), system-ui, sans-serif; font-size: 10.5px; font-weight: 500; color:#111; letter-spacing:0; }
+
         .provider-cell{ position:relative; padding-right:20px !important; }
         .provider-cell .caret{ position:absolute; right:8px; top:3px; font-size:14px; color:#666; line-height:1; }
 
         .row-lg td{ height:46px; }
         .row-xl td{ height:62px; }
 
-        .section{ background:#ecd4bb !important; text-align:center; font-weight:700; letter-spacing:1.2px; color:#1f1f1f; font-size:11px; padding:5px 8px !important; }
+        table.form td.section{ background:#ecd4bb !important; text-align:center; font-weight:700; letter-spacing:1.2px; color:#1f1f1f; font-size:11px; padding:5px 8px !important; font-family: 'Hoxton', var(--font-section), 'Manrope', system-ui, sans-serif; line-height:1.3; }
         .subsection{ background:#ecd4bb !important; font-weight:700; color:#1f1f1f; font-size:11px; padding:4px 8px !important; }
         .band-tight{ padding:3px 8px 2px 8px !important; }
         .sh{ font-weight:700; font-size:10.5px; letter-spacing:0.4px; }
