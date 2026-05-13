@@ -433,21 +433,7 @@ export default function PatientsList() {
                       <div className="grid gap-6 2xl:grid-cols-[320px_minmax(0,1fr)]">
                         <div className="space-y-4">
                           <div className="surface-card p-5">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="eyebrow">{editingPatientId === patient.id ? 'Edit patient' : 'Patient detail'}</div>
-                              {editingPatientId !== patient.id && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    startEditPatient(patient)
-                                  }}
-                                  className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-700 hover:text-teal-900"
-                                >
-                                  Edit
-                                </button>
-                              )}
-                            </div>
+                            <div className="eyebrow">{editingPatientId === patient.id ? 'Edit patient' : 'Patient detail'}</div>
 
                             {editingPatientId === patient.id ? (
                               <form
@@ -540,58 +526,83 @@ export default function PatientsList() {
                                 </div>
                               </form>
                             ) : (
-                              <div className="mt-4 grid gap-4 xl:grid-cols-2 2xl:grid-cols-1">
-                                <div>
-                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Full name</div>
-                                  <div className="mt-1 font-semibold text-slate-950">{patient.name}</div>
+                              <>
+                                <div className="mt-4 grid gap-4 xl:grid-cols-2 2xl:grid-cols-1">
+                                  <div>
+                                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Full name</div>
+                                    <div className="mt-1 font-semibold text-slate-950">{patient.name}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Card number</div>
+                                    <div className="mt-1 font-semibold text-slate-950">{patient.cardNumber}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Birth date</div>
+                                    <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.birthDate)}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sex</div>
+                                    <div className="mt-1 font-semibold text-slate-950">{patient.sex ? (patient.sex === 'M' ? 'Male' : 'Female') : 'Not provided'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Policy number</div>
+                                    <div className="mt-1 font-semibold text-slate-950">{patient.policyNo || 'Not provided'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Member since</div>
+                                    <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.createdAt)}</div>
+                                  </div>
                                 </div>
-                                <div>
-                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Card number</div>
-                                  <div className="mt-1 font-semibold text-slate-950">{patient.cardNumber}</div>
-                                </div>
-                                <div>
-                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Birth date</div>
-                                  <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.birthDate)}</div>
-                                </div>
-                                <div>
-                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sex</div>
-                                  <div className="mt-1 font-semibold text-slate-950">{patient.sex ? (patient.sex === 'M' ? 'Male' : 'Female') : 'Not provided'}</div>
-                                </div>
-                                <div>
-                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Policy number</div>
-                                  <div className="mt-1 font-semibold text-slate-950">{patient.policyNo || 'Not provided'}</div>
-                                </div>
-                                <div>
-                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Member since</div>
-                                  <div className="mt-1 font-semibold text-slate-950">{formatDate(patient.createdAt)}</div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
 
-                          <div className="surface-card p-5">
-                            <div className="eyebrow">Actions</div>
-                            <div className="mt-4 flex flex-wrap gap-3">
-                              <Link href={`/claims/new?patientId=${patient.id}`} className="button-primary">
-                                New Claim
-                              </Link>
-                              <button
-                                type="button"
-                                onClick={() => startEditPatient(patient)}
-                                disabled={savingEdit}
-                                className="button-secondary"
-                              >
-                                Edit Patient
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => deletePatient(patient.id, patient.name)}
-                                disabled={loading}
-                                className="button-danger"
-                              >
-                                {loading ? 'Working...' : 'Delete Patient'}
-                              </button>
-                            </div>
+                                <div className="mt-5 flex justify-end border-t border-slate-200 pt-4">
+                                  <div className="claim-actions">
+                                    <Link
+                                      href={`/claims/new?patientId=${patient.id}`}
+                                      className="claim-action-btn claim-action-btn--open"
+                                      aria-label="Create new claim for this patient"
+                                      title="New Claim"
+                                    >
+                                      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <path d="M14 2v6h6" />
+                                        <path d="M8 13h6" />
+                                        <path d="M8 17h8" />
+                                        <path d="M8 9h2" />
+                                      </svg>
+                                    </Link>
+                                    <button
+                                      type="button"
+                                      onClick={() => startEditPatient(patient)}
+                                      disabled={savingEdit}
+                                      className="claim-action-btn claim-action-btn--print"
+                                      aria-label="Edit patient details"
+                                      title="Edit Patient"
+                                    >
+                                      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => deletePatient(patient.id, patient.name)}
+                                      disabled={loading}
+                                      className="claim-action-btn claim-action-btn--delete"
+                                      aria-label="Delete patient"
+                                      title="Delete Patient"
+                                    >
+                                      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 6h18" />
+                                        <path d="M8 6V4h8v2" />
+                                        <path d="M19 6l-1 14H6L5 6" />
+                                        <path d="M10 11v6" />
+                                        <path d="M14 11v6" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
 
