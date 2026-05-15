@@ -73,7 +73,8 @@ type FontOption = {
   id: string
   label: string
   cssFamily: string
-  google: string
+  /** Google Fonts CSS query fragment. Omit for system/web-safe fonts that don't need loading. */
+  google?: string
   fallback: string
   size: string
   category: FontCategory
@@ -91,7 +92,11 @@ const FONT_OPTIONS: FontOption[] = [
   { id: 'homemade-apple',   label: 'Homemade Apple (formal script)',   cssFamily: 'Homemade Apple',       google: 'Homemade+Apple',                fallback: 'cursive',    size: '11px',   category: 'Handwriting' },
   { id: 'dancing-script',   label: 'Dancing Script (flowing script)',  cssFamily: 'Dancing Script',       google: 'Dancing+Script:wght@400;500',   fallback: 'cursive',    size: '14px',   category: 'Handwriting' },
 
-  // Sans-serif (standard professional)
+  // Sans-serif (standard professional) — system/web-safe first, then Google
+  { id: 'ibm-plex-sans',    label: 'IBM Plex Sans (default)',          cssFamily: 'IBM Plex Sans',                                                 fallback: '-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'arial',            label: 'Arial (system)',                   cssFamily: 'Arial',                                                         fallback: 'Helvetica, sans-serif', size: '10.5px', category: 'Sans-serif' },
+  { id: 'helvetica',        label: 'Helvetica (system)',               cssFamily: 'Helvetica',                                                     fallback: 'Arial, sans-serif',     size: '10.5px', category: 'Sans-serif' },
+  { id: 'system-sans',      label: 'System Sans-serif',                cssFamily: 'system-ui',                                                     fallback: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif', size: '10.5px', category: 'Sans-serif' },
   { id: 'inter',            label: 'Inter',                            cssFamily: 'Inter',                google: 'Inter:wght@400;500;600',        fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
   { id: 'roboto',           label: 'Roboto',                           cssFamily: 'Roboto',               google: 'Roboto:wght@400;500',           fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
   { id: 'open-sans',        label: 'Open Sans',                        cssFamily: 'Open Sans',            google: 'Open+Sans:wght@400;600',        fallback: 'sans-serif', size: '10.5px', category: 'Sans-serif' },
@@ -123,7 +128,7 @@ const FONT_OPTIONS: FontOption[] = [
 
 const FONT_CATEGORIES: FontCategory[] = ['Handwriting', 'Sans-serif', 'Serif', 'Monospace']
 
-const DEFAULT_FONT_ID = 'patrick-hand'
+const DEFAULT_FONT_ID = 'ibm-plex-sans'
 const DEFAULT_FONT_COLOR = '#111111'
 const FONT_STORAGE_KEY = 'claim-print:fill-font'
 const FONT_SIZE_STORAGE_KEY = 'claim-print:fill-size'
@@ -171,13 +176,15 @@ export default function PrintClaimPage() {
   useEffect(() => {
     const opt = FONT_OPTIONS.find((o) => o.id === selectedFontId)
     if (!opt) return
-    const linkId = `font-loader-${opt.id}`
-    if (!document.getElementById(linkId)) {
-      const link = document.createElement('link')
-      link.id = linkId
-      link.rel = 'stylesheet'
-      link.href = `https://fonts.googleapis.com/css2?family=${opt.google}&display=swap`
-      document.head.appendChild(link)
+    if (opt.google) {
+      const linkId = `font-loader-${opt.id}`
+      if (!document.getElementById(linkId)) {
+        const link = document.createElement('link')
+        link.id = linkId
+        link.rel = 'stylesheet'
+        link.href = `https://fonts.googleapis.com/css2?family=${opt.google}&display=swap`
+        document.head.appendChild(link)
+      }
     }
     try {
       window.localStorage.setItem(FONT_STORAGE_KEY, opt.id)
