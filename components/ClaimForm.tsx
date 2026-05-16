@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import Link from 'next/link'
@@ -66,7 +66,37 @@ interface FormData {
 }
 
 export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}) {
-  const { register, handleSubmit, reset, setValue } = useForm<FormData>()
+  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>()
+
+  const commentsRef = useRef<HTMLTextAreaElement | null>(null)
+  const additionalNotesRef = useRef<HTMLTextAreaElement | null>(null)
+  const clinicalFindingsRef = useRef<HTMLTextAreaElement | null>(null)
+  const [commentsOverflow, setCommentsOverflow] = useState(false)
+  const [additionalNotesOverflow, setAdditionalNotesOverflow] = useState(false)
+  const [clinicalFindingsOverflow, setClinicalFindingsOverflow] = useState(false)
+
+  const commentsValue = watch('comments')
+  const additionalNotesValue = watch('additionalNotes')
+  const clinicalFindingsValue = watch('clinicalFindings')
+
+  const checkOverflow = (el: HTMLTextAreaElement | null) =>
+    !!el && el.scrollHeight > el.clientHeight + 1
+
+  useEffect(() => {
+    setCommentsOverflow(checkOverflow(commentsRef.current))
+  }, [commentsValue])
+
+  useEffect(() => {
+    setAdditionalNotesOverflow(checkOverflow(additionalNotesRef.current))
+  }, [additionalNotesValue])
+
+  useEffect(() => {
+    setClinicalFindingsOverflow(checkOverflow(clinicalFindingsRef.current))
+  }, [clinicalFindingsValue])
+
+  const commentsRegister = register('comments')
+  const additionalNotesRegister = register('additionalNotes')
+  const clinicalFindingsRegister = register('clinicalFindings')
   const router = useRouter()
   const searchParams = useSearchParams()
   const [patient, setPatient] = useState<Patient | null>(null)
@@ -665,11 +695,26 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
                 <span className="shrink-0 w-max max-w-[min(40%,10rem)] pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
                   If Yes Specify:
                 </span>
-                <textarea
-                  {...register('additionalNotes')}
-                  rows={3}
-                  className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
-                />
+                <div className="flex-1 min-w-0">
+                  <textarea
+                    {...additionalNotesRegister}
+                    ref={(el) => {
+                      additionalNotesRegister.ref(el)
+                      additionalNotesRef.current = el
+                    }}
+                    onChange={(e) => {
+                      additionalNotesRegister.onChange(e)
+                      setAdditionalNotesOverflow(checkOverflow(e.currentTarget))
+                    }}
+                    rows={4}
+                    className="w-full border-b border-gray-400 px-2 py-1 text-sm resize-none"
+                  />
+                  {additionalNotesOverflow && (
+                    <p className="mt-1 text-[11px] text-amber-600">
+                      Warning: text may not fit in the available space. try to keep it in 4 rows
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -684,11 +729,26 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
               <span className="shrink-0 w-max max-w-[min(40%,10rem)] pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
                 Clinical Findings:
               </span>
-              <textarea
-                {...register('clinicalFindings')}
-                rows={2}
-                className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
-              />
+              <div className="flex-1 min-w-0">
+                <textarea
+                  {...clinicalFindingsRegister}
+                  ref={(el) => {
+                    clinicalFindingsRegister.ref(el)
+                    clinicalFindingsRef.current = el
+                  }}
+                  onChange={(e) => {
+                    clinicalFindingsRegister.onChange(e)
+                    setClinicalFindingsOverflow(checkOverflow(e.currentTarget))
+                  }}
+                  rows={2}
+                  className="w-full border-b border-gray-400 px-2 py-1 text-sm resize-none"
+                />
+                {clinicalFindingsOverflow && (
+                  <p className="mt-1 text-[11px] text-amber-600">
+                    Warning: text may not fit in the available space. try to keep it in 2 rows
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Cause Row */}
@@ -770,11 +830,26 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
               <span className="shrink-0 w-max pr-1 text-xs font-normal text-gray-900 leading-snug pt-0.5">
                 Comments
               </span>
-              <textarea
-                {...register('comments')}
-                rows={2}
-                className="flex-1 min-w-0 border-b border-gray-400 px-2 py-1 text-sm resize-none"
-              />
+              <div className="flex-1 min-w-0">
+                <textarea
+                  {...commentsRegister}
+                  ref={(el) => {
+                    commentsRegister.ref(el)
+                    commentsRef.current = el
+                  }}
+                  onChange={(e) => {
+                    commentsRegister.onChange(e)
+                    setCommentsOverflow(checkOverflow(e.currentTarget))
+                  }}
+                  rows={3}
+                  className="w-full border-b border-gray-400 px-2 py-1 text-sm resize-none"
+                />
+                {commentsOverflow && (
+                  <p className="mt-1 text-[11px] text-amber-600">
+                    Warning: text may not fit in the available space. try to keep it in 3 rows
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
