@@ -40,6 +40,8 @@ type ClaimResponse = {
   telFax?: string
   signature?: string
   physicianSignature?: string
+  includeStamp?: boolean
+  stampType?: string
   patient?: {
     name?: string
     cardNumber?: string
@@ -344,6 +346,13 @@ export default function PrintClaimPage() {
                         {claim.physicianSignature ? (
                           <img src={claim.physicianSignature} alt="Physician signature" className="sig-stamp-img" />
                         ) : null}
+                        {claim.includeStamp ? (
+                          <img
+                            src={claim.stampType === 'medone' ? '/stamp-medone.png' : '/stamp-chrisone.png'}
+                            alt="Practice stamp"
+                            className="practice-stamp-img"
+                          />
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -441,9 +450,10 @@ export default function PrintClaimPage() {
         .phys-cell{ border-right:none !important; padding:5px 8px !important; }
         .phys-cell + td{ border-left:1px solid #888; }
 
-        .sig-stamp-row{ display:flex; align-items:flex-start; gap:12px; min-height:54px; }
+        .sig-stamp-row{ position:relative; display:flex; align-items:flex-start; gap:12px; min-height:54px; }
         .sig-stamp-label{ flex:0 0 auto; }
-        .sig-stamp-img{ flex:1 1 auto; max-height:78px; max-width:100%; object-fit:contain; object-position:center center; }
+        .sig-stamp-img{ flex:1 1 auto; margin-left:60px; max-height:78px; max-width:100%; object-fit:contain; object-position:center center; }
+        .practice-stamp-img{ position:absolute; left:100px; top:50%; transform:translateY(-50%); max-height:120px; max-width:220px; object-fit:contain; pointer-events:none; }
         .patient-sig-cell{ vertical-align:top; padding:5px 8px !important; }
         .patient-sig-label{ font-style:italic; font-weight:700; font-size:11px; padding:0 0 6px 0; margin:0 0 6px 0; text-align:left; border-bottom:1px solid #888; }
         .patient-sig-img{ max-height:70px; max-width:100%; object-fit:contain; display:block; margin:4px 0 0 0; }

@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
         approvalCode: body.approvalCode,
         signature: body.signature || null,
         physicianSignature: body.physicianSignature || null,
+        includeStamp: body.includeStamp || false,
+        stampType: body.stampType || null,
       },
     })
     

@@ -63,6 +63,8 @@ interface FormData {
   telFax: string
   approvedTariff: boolean
   approvalCode: string
+  includeStamp: boolean
+  stampType: string
 }
 
 export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}) {
@@ -78,6 +80,8 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
   const commentsValue = watch('comments')
   const additionalNotesValue = watch('additionalNotes')
   const clinicalFindingsValue = watch('clinicalFindings')
+  const includeStampValue = watch('includeStamp')
+  const stampTypeValue = watch('stampType')
 
   const checkOverflow = (el: HTMLTextAreaElement | null) =>
     !!el && el.scrollHeight > el.clientHeight + 1
@@ -93,6 +97,12 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
   useEffect(() => {
     setClinicalFindingsOverflow(checkOverflow(clinicalFindingsRef.current))
   }, [clinicalFindingsValue])
+
+  useEffect(() => {
+    if (includeStampValue && !stampTypeValue) {
+      setValue('stampType', 'chrisone')
+    }
+  }, [includeStampValue, stampTypeValue, setValue])
 
   const commentsRegister = register('comments')
   const additionalNotesRegister = register('additionalNotes')
@@ -996,6 +1006,45 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
               />
               <div>
                 <label className="block text-xs font-semibold text-gray-900 mb-2">Signature and stamp</label>
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    id="includeStamp"
+                    {...register('includeStamp')}
+                    className="w-3 h-3 border border-gray-400"
+                  />
+                  <label htmlFor="includeStamp" className="text-xs text-gray-900">
+                    Include practice stamp on printed form
+                  </label>
+                </div>
+                {includeStampValue && (
+                  <div className="flex flex-wrap items-center gap-4 mb-2 pl-5">
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="radio"
+                        id="stamp-chrisone"
+                        value="chrisone"
+                        {...register('stampType')}
+                        className="w-3 h-3 border border-gray-400"
+                      />
+                      <label htmlFor="stamp-chrisone" className="text-xs text-gray-900">
+                        Chris One Point Home Care
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="radio"
+                        id="stamp-medone"
+                        value="medone"
+                        {...register('stampType')}
+                        className="w-3 h-3 border border-gray-400"
+                      />
+                      <label htmlFor="stamp-medone" className="text-xs text-gray-900">
+                        MED ONE Medical Center
+                      </label>
+                    </div>
+                  </div>
+                )}
                 <div 
                   className="h-20 border border-gray-300 mb-2 flex items-center justify-center overflow-hidden bg-white"
                 >

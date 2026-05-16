@@ -85,6 +85,8 @@ export async function PUT(
         approvalCode: body.approvalCode ?? null,
         signature: body.signature ?? null,
         physicianSignature: body.physicianSignature ?? null,
+        includeStamp: body.includeStamp || false,
+        stampType: body.stampType || null,
       },
     })
 

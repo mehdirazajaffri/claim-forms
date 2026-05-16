@@ -82,6 +82,8 @@ model Claim {
   telFax                String?
   signature             String? // Patient/Guardian signature (base64)
   physicianSignature    String? // Physician signature and stamp (base64)
+  includeStamp          Boolean @default(false) // Render the practice stamp in the print view
+  stampType             String? // Selected practice stamp: "chrisone" | "medone"
   
   // Almadallah Use Only
   approvedTariff        Boolean @default(false)
