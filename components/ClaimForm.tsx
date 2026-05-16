@@ -740,12 +740,12 @@ export default function ClaimForm({ onSuccess }: { onSuccess?: () => void } = {}
                     clinicalFindingsRegister.onChange(e)
                     setClinicalFindingsOverflow(checkOverflow(e.currentTarget))
                   }}
-                  rows={2}
+                  rows={3}
                   className="w-full border-b border-gray-400 px-2 py-1 text-sm resize-none"
                 />
                 {clinicalFindingsOverflow && (
                   <p className="mt-1 text-[11px] text-amber-600">
-                    Warning: text may not fit in the available space. try to keep it in 2 rows
+                    Warning: text may not fit in the available space. try to keep it in 3 rows
                   </p>
                 )}
               </div>
