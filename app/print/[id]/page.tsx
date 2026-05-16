@@ -417,7 +417,7 @@ export default function PrintClaimPage() {
         .field-row > .value{ flex:1 1 auto; min-width:0; min-height:18px; }
 
         .box{ min-height:32px; }
-        .box.tall{ min-height:74px; }
+        .box.tall{ min-height:32px; }
 
         .med-checks-cell{ border-right:none !important; }
         .med-checks-cell + td{ border-left:none !important; }
