@@ -19,6 +19,11 @@ export async function GET(req: NextRequest) {
             createdAt: 'desc',
           },
         },
+        visitNotes: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     })
     return NextResponse.json(patients)

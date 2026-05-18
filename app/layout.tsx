@@ -43,8 +43,14 @@ export default function RootLayout({
                   <Link href="/" className="app-nav__link">
                     Dashboard
                   </Link>
+                  <Link href="/visit-notes" className="app-nav__link">
+                    Visit Notes
+                  </Link>
                   <Link href="/claims/new" className="app-nav__link app-nav__link--strong">
                     New Claim
+                  </Link>
+                  <Link href="/visit-notes/new" className="app-nav__link app-nav__link--strong">
+                    New Visit Note
                   </Link>
                   <AuthNav />
                 </nav>

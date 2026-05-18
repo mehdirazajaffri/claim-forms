@@ -31,6 +31,7 @@ model Patient {
   updatedAt           DateTime   @updatedAt
 
   claims              Claim[]
+  visitNotes          VisitNote[]
 }
 
 model Claim {
@@ -91,4 +92,64 @@ model Claim {
   
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
+}
+
+model VisitNote {
+  id                String   @id @default(cuid())
+  patientId         String
+  patient           Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  shareToken        String   @unique @default(cuid())
+
+  // Patient/Visit info (snapshot)
+  patientName       String?
+  ageGender         String?
+  dateOfVisit       String?
+  visitTime         String?
+  address           String?
+  contactNumber     String?
+  accompaniedBy     String?
+
+  // Vitals
+  temperature       String?
+  bloodPressure     String?
+  heartRate         String?
+  respiratoryRate   String?
+  spo2              String?
+  bloodSugar        String?
+  weight            String?
+
+  // Diagnosis
+  diagnosis         String?
+  chiefComplaints   String?
+
+  // General Examination
+  appearance        String?
+  hydration         String?
+  chest             String?
+  cvs               String?
+  perAbd            String?
+  cns               String?
+  musculoskeletal   String?
+  pallor            String?
+  icterus           String?
+  cyanosis          String?
+  clubbing          String?
+  koilonychia       String?
+  lymphadenopathy   String?
+  edema             String?
+  otherFindings     String?
+
+  // Recommendations / Plan of Action
+  medicationChanges String?
+  laboratoryTests   String?
+  followUpPlan      String?
+  otherInstructions String?
+
+  // Doctor's Details
+  doctorName        String?
+  doctorContact     String?
+  doctorRegNo       String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

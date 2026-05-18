@@ -14,6 +14,16 @@ interface Claim {
   createdAt: string
 }
 
+interface VisitNote {
+  id: string
+  dateOfVisit?: string | null
+  visitTime?: string | null
+  chiefComplaints?: string | null
+  doctorName?: string | null
+  shareToken?: string | null
+  createdAt: string
+}
+
 interface Patient {
   id: string
   cardNumber: string
@@ -24,6 +34,7 @@ interface Patient {
   assessmentFileLink?: string
   createdAt: string
   claims: Claim[]
+  visitNotes?: VisitNote[]
 }
 
 type StatusTone = 'success' | 'danger' | 'neutral'
@@ -122,6 +133,21 @@ export default function PatientsList() {
     } catch (error) {
       console.error('Failed to delete claim:', error)
       setStatus({ tone: 'danger', text: 'Error deleting claim. Please try again.' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteVisitNote = async (visitNoteId: string, patientName: string) => {
+    if (!confirm(`Delete this visit note for ${patientName}? This cannot be undone.`)) return
+    try {
+      setLoading(true)
+      await axios.delete(`/api/visit-notes/${visitNoteId}`)
+      setStatus({ tone: 'success', text: `Visit note removed for ${patientName}.` })
+      fetchPatients()
+    } catch (error) {
+      console.error('Failed to delete visit note:', error)
+      setStatus({ tone: 'danger', text: 'Error deleting visit note. Please try again.' })
     } finally {
       setLoading(false)
     }
@@ -414,6 +440,7 @@ export default function PatientsList() {
                         <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">Card {patient.cardNumber}</span>
                         {patient.policyNo && <span className="rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-800">Policy {patient.policyNo}</span>}
                         <span className="rounded-full bg-teal-50 px-3 py-1 font-medium text-teal-800">{patient.claims?.length || 0} claims</span>
+                        <span className="rounded-full bg-sky-50 px-3 py-1 font-medium text-sky-800">{patient.visitNotes?.length || 0} visits</span>
                       </div>
                     </div>
 
@@ -606,7 +633,8 @@ export default function PatientsList() {
                           </div>
                         </div>
 
-                        <div className="surface-card p-5 min-w-0">
+                        <div className="space-y-6 min-w-0">
+                          <div className="surface-card p-5 min-w-0">
                           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                             <div>
                               <div className="eyebrow">Claim history</div>
@@ -768,6 +796,96 @@ export default function PatientsList() {
                               <p className="mt-2 text-sm text-slate-600">Create the first claim for this patient to start building reusable history.</p>
                             </div>
                           )}
+                          </div>
+
+                          <div className="surface-card p-5 min-w-0">
+                            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                              <div>
+                                <div className="eyebrow">Home visit notes</div>
+                                <h4 className="mt-2 text-xl font-semibold text-slate-950">{patient.visitNotes?.length || 0} visit notes recorded</h4>
+                                <p className="mt-1 text-xs text-slate-500">In-person home consultation notes you can open, download, or share by email / WhatsApp.</p>
+                              </div>
+                              <Link
+                                href={`/visit-notes/new?patientId=${patient.id}`}
+                                className="button-secondary self-start md:self-auto"
+                              >
+                                + New visit note
+                              </Link>
+                            </div>
+
+                            {patient.visitNotes && patient.visitNotes.length > 0 ? (
+                              <ul className="mt-5 space-y-2">
+                                {patient.visitNotes.map((note) => (
+                                  <li
+                                    key={note.id}
+                                    className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+                                  >
+                                    <div className="space-y-1 min-w-0">
+                                      <div className="text-sm font-semibold text-slate-950">
+                                        {formatDate(note.dateOfVisit || note.createdAt)}
+                                        {note.visitTime ? ` • ${note.visitTime}` : ''}
+                                      </div>
+                                      {note.chiefComplaints && (
+                                        <div className="text-xs text-slate-600 line-clamp-2">{note.chiefComplaints}</div>
+                                      )}
+                                      {note.doctorName && (
+                                        <div className="text-[11px] text-slate-500">{note.doctorName}</div>
+                                      )}
+                                    </div>
+                                    <div className="claim-actions sm:justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => router.push(`/visit-notes/new?visitNoteId=${note.id}`)}
+                                        className="claim-action-btn claim-action-btn--open"
+                                        aria-label="Open visit note"
+                                        title="Open"
+                                      >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                          <path d="M7 17L17 7" />
+                                          <path d="M9 7h8v8" />
+                                        </svg>
+                                      </button>
+                                      <a
+                                        href={`/api/visit-notes/${note.id}/download`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="claim-action-btn claim-action-btn--print"
+                                        aria-label="Download visit note PDF"
+                                        title="Download PDF"
+                                      >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                          <path d="M6 9V4h12v5" />
+                                          <rect x="6" y="14" width="12" height="6" rx="1" />
+                                          <rect x="4" y="9" width="16" height="7" rx="2" />
+                                        </svg>
+                                      </a>
+                                      <button
+                                        type="button"
+                                        onClick={() => deleteVisitNote(note.id, patient.name)}
+                                        disabled={loading}
+                                        className="claim-action-btn claim-action-btn--delete"
+                                        aria-label="Delete visit note"
+                                        title="Delete visit note"
+                                      >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                          <path d="M3 6h18" />
+                                          <path d="M8 6V4h8v2" />
+                                          <path d="M19 6l-1 14H6L5 6" />
+                                          <path d="M10 11v6" />
+                                          <path d="M14 11v6" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-6 text-center">
+                                <h5 className="text-base font-semibold text-slate-950">No visit notes yet</h5>
+                                <p className="mt-2 text-sm text-slate-600">Capture the first home visit note to start building a history.</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
